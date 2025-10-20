@@ -4,12 +4,15 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-djangorestframework = "*"
 psycopg2-binary = "*"
-python-decouple = "*"
 django-debug-toolbar = "*"
 kafka-python = "*"
 django = "*"
+pillow = "*"
+pylint = "*"
+pylint-django = "*"
+djangorestframework = "*"
+python-decouple = "*"
 
 [dev-packages]
 
