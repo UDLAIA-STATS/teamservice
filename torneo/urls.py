@@ -3,6 +3,7 @@ from .views import (
     EquipoDetailView,
     EquipoListCreateView,
     EquipoAllView,
+    EquipoSearchByNameView,
     PartidoDetailView,
     PartidoListCreateView,
     PartidoAllView,
@@ -26,6 +27,7 @@ urlpatterns = [
     path('equipos/<int:pk>/', EquipoDetailView.as_view(), name='equipo-detail'),
     path('equipos/all/', EquipoAllView.as_view(), name='equipo-all'),
     path('equipos/<int:pk>/update/', EquipoUpdateView.as_view(), name='equipo-update'),
+    path('equipos/search/<str:name>/', EquipoSearchByNameView.as_view(), name='equipo-search'),
 
     path('partidos/', PartidoListCreateView.as_view(), name='partido-list-create'),
     path('partidos/<int:pk>/', PartidoDetailView.as_view(), name='partido-detail'),

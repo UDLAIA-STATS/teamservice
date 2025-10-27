@@ -50,20 +50,24 @@ class EquipoDetailView(APIView):
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+class EquipoSearchByNameView(APIView):
 
-class EquipoUpdateView(APIView):
-    def put(self, request, pk):
+    def get_object(self, name):
         try:
-            equipo = Equipo.objects.get(pk=pk)
+            return Equipo.objects.get(nombreequipo=name)
+        except Partido.DoesNotExist:
+            return None
+
+    def get(self, request, name):
+        try:
+            equipo = self.get_object(name)
             if not equipo:
                 return Response({"error": "Equipo no encontrado"}, status=status.HTTP_404_NOT_FOUND)
-            serializer = EquipoSerializer(equipo, data=request.data)
-            if serializer.is_valid():
-                serializer.save()
-                return Response({"mensaje": "Equipo actualizado correctamente", "equipo": serializer.data})
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response(EquipoSerializer(equipo).data)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
 
 class EquipoAllView(APIView):
     def get(self, request):
@@ -93,17 +97,6 @@ class PartidoListCreateView(APIView):
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
-    def delete(self, request, pk):
-        try:
-            partido = Partido.objects.get(pk=pk)
-            partido.delete()
-            return Response({"mensaje": "Partido eliminado correctamente"}, status=status.HTTP_204_NO_CONTENT)
-        except Partido.DoesNotExist:
-            return Response({"error": "Partido no encontrado"}, status=status.HTTP_404_NOT_FOUND)
-        except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
 class PartidoDetailView(APIView):
 
     def get_object(self, pk):
@@ -118,20 +111,6 @@ class PartidoDetailView(APIView):
             if not partido:
                 return Response({"error": "Partido no encontrado"}, status=status.HTTP_404_NOT_FOUND)
             return Response(PartidoSerializer(partido).data)
-        except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-class PartidoUpdateView(APIView):
-    def put(self, request, pk):
-        try:
-            partido = Partido.objects.get(pk=pk)
-            if not partido:
-                return Response({"error": "Partido no encontrado"}, status=status.HTTP_404_NOT_FOUND)
-            serializer = PartidoSerializer(partido, data=request.data)
-            if serializer.is_valid():
-                serializer.save()
-                return Response({"mensaje": "Partido actualizado correctamente", "partido": serializer.data})
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -163,16 +142,6 @@ class TorneoListCreateView(APIView):
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
-    def delete(self, request, pk):
-        try:
-            torneo = Torneo.objects.get(pk=pk)
-            torneo.delete()
-            return Response({"mensaje": "Torneo eliminado correctamente"}, status=status.HTTP_204_NO_CONTENT)
-        except Torneo.DoesNotExist:
-            return Response({"error": "Torneo no encontrado"}, status=status.HTTP_404_NOT_FOUND)
-        except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
 class TorneoDetailView(APIView):
 
     def get_object(self, pk):
@@ -187,20 +156,6 @@ class TorneoDetailView(APIView):
             if not torneo:
                 return Response({"error": "Torneo no encontrado"}, status=status.HTTP_404_NOT_FOUND)
             return Response(TorneoSerializer(torneo).data)
-        except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-class TorneoUpdateView(APIView):
-    def put(self, request, pk):
-        try:
-            torneo = Torneo.objects.get(pk=pk)
-            if not torneo:
-                return Response({"error": "Torneo no encontrado"}, status=status.HTTP_404_NOT_FOUND)
-            serializer = TorneoSerializer(torneo, data=request.data)
-            if serializer.is_valid():
-                serializer.save()
-                return Response({"mensaje": "Torneo actualizado correctamente", "torneo": serializer.data})
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -226,16 +181,6 @@ class TemporadaListCreateView(APIView):
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
-    def delete(self, request, pk):
-        try:
-            temporada = Temporada.objects.get(pk=pk)
-            temporada.delete()
-            return Response({"mensaje": "Temporada eliminada correctamente"}, status=status.HTTP_204_NO_CONTENT)
-        except Temporada.DoesNotExist:
-            return Response({"error": "Temporada no encontrada"}, status=status.HTTP_404_NOT_FOUND)
-        except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
 
 class TemporadaDetailView(APIView):
 
@@ -251,20 +196,6 @@ class TemporadaDetailView(APIView):
             if not temporada:
                 return Response({"error": "Temporada no encontrada"}, status=status.HTTP_404_NOT_FOUND)
             return Response(TemporadaSerializer(temporada).data)
-        except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-class TemporadaUpdateView(APIView):
-    def put(self, request, pk):
-        try:
-            temporada = Temporada.objects.get(pk=pk)
-            if not temporada:
-                return Response({"error": "Temporada no encontrada"}, status=status.HTTP_404_NOT_FOUND)
-            serializer = TemporadaSerializer(temporada, data=request.data)
-            if serializer.is_valid():
-                serializer.save()
-                return Response({"mensaje": "Temporada actualizada correctamente", "temporada": serializer.data})
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -293,16 +224,6 @@ class TorneoPartidoListCreateView(APIView):
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    def delete(self, request):
-        torneo_id = request.data.get("idTorneo")
-        partido_id = request.data.get("idPartido")
-        try:
-            relacion = TorneoPartido.objects.get(idTorneo=torneo_id, idPartido=partido_id)
-            relacion.delete()
-            return Response({"mensaje": "Relación eliminada correctamente"}, status=status.HTTP_204_NO_CONTENT)
-        except TorneoPartido.DoesNotExist:
-            return Response({"error": "Relación no encontrada"}, status=status.HTTP_404_NOT_FOUND)
-        
 class TorneoPartidoDetailView(APIView):
 
     def get_object(self, torneo_id, partido_id):
@@ -326,5 +247,84 @@ class TorneoPartidoAllView(APIView):
             relaciones = TorneoPartido.objects.all()
             serializer = TorneoPartidoSerializer(relaciones, many=True)
             return Response(serializer.data, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class EquipoUpdateView(APIView):
+    def patch(self, request, pk):
+        try:
+            equipo = Equipo.objects.get(pk=pk)
+            if not equipo:
+                return Response({"error": "Equipo no encontrado"}, status=status.HTTP_404_NOT_FOUND)
+
+            serializer = EquipoSerializer(equipo, data=request.data, partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                return Response({"mensaje": "Equipo actualizado correctamente", "equipo": serializer.data})
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class PartidoUpdateView(APIView):
+    def patch(self, request, pk):
+        try:
+            partido = Partido.objects.get(pk=pk)
+            if not partido:
+                return Response({"error": "Partido no encontrado"}, status=status.HTTP_404_NOT_FOUND)
+
+            serializer = PartidoSerializer(partido, data=request.data, partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                return Response({"mensaje": "Partido actualizado correctamente", "partido": serializer.data})
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class TorneoUpdateView(APIView):
+    def patch(self, request, pk):
+        try:
+            torneo = Torneo.objects.get(pk=pk)
+            if not torneo:
+                return Response({"error": "Torneo no encontrado"}, status=status.HTTP_404_NOT_FOUND)
+
+            serializer = TorneoSerializer(torneo, data=request.data, partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                return Response({"mensaje": "Torneo actualizado correctamente", "torneo": serializer.data})
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class TemporadaUpdateView(APIView):
+    def patch(self, request, pk):
+        try:
+            temporada = Temporada.objects.get(pk=pk)
+            if not temporada:
+                return Response({"error": "Temporada no encontrada"}, status=status.HTTP_404_NOT_FOUND)
+
+            serializer = TemporadaSerializer(temporada, data=request.data, partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                return Response({"mensaje": "Temporada actualizada correctamente", "temporada": serializer.data})
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class TorneoPartidoUpdateView(APIView):
+    def patch(self, request, torneo_id, partido_id):
+        try:
+            relacion = TorneoPartido.objects.get(idTorneo=torneo_id, idPartido=partido_id)
+            serializer = TorneoPartidoSerializer(relacion, data=request.data, partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                return Response({"mensaje": "Relación actualizada correctamente", "relacion": serializer.data})
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except TorneoPartido.DoesNotExist:
+            return Response({"error": "Relación no encontrada"}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

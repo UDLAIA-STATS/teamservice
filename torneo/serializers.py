@@ -1,7 +1,13 @@
+import base64
 from django.db import IntegrityError
 from rest_framework import serializers
 from .models import Equipo, Partido, Torneo, TorneoPartido, Temporada
 
+
+import base64
+from django.db import IntegrityError
+from rest_framework import serializers
+from .models import Equipo
 
 class EquipoSerializer(serializers.ModelSerializer):
     class Meta:
@@ -10,33 +16,51 @@ class EquipoSerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
         # Evitar duplicados en la creación
-        if self.instance is None and Equipo.objects.filter(nombreequipo=attrs).exists():
+        nombre = attrs.get("nombreequipo")
+        if self.instance is None and Equipo.objects.filter(nombreequipo=nombre).exists():
             raise serializers.ValidationError("Ya existe un equipo con ese nombre.")
         return attrs
 
     def create(self, validated_data):
         try:
-            equipo = Equipo.objects.create(
-                nombreequipo=validated_data.get('nombreequipo'),
-                logoequipo=validated_data.get('logoequipo')
-            )
+            # Decodificar imagen si viene en base64
+            logoequipo = validated_data.get('logoequipo')
+            if isinstance(logoequipo, str) and logoequipo.startswith("data:image"):
+                header, base64_data = logoequipo.split(',', 1)
+                validated_data['logoequipo'] = base64.b64decode(base64_data)
+
+            equipo = Equipo.objects.create(**validated_data)
             return equipo
-        except ValueError as e:
+        except IntegrityError:
+            raise serializers.ValidationError({
+                "error": f"Ya existe un equipo con el nombre: {validated_data.get('nombreequipo')}"
+            })
+        except Exception as e:
             raise serializers.ValidationError({"error": str(e)})
-        except IntegrityError as e:
-            raise serializers.ValidationError({"error": f"Ya existe un equipo con el nombre: {validated_data.get('nombreequipo')}"})
 
     def update(self, instance, validated_data):
         try:
-            instance.nombreequipo = validated_data.get('nombreequipo', instance.nombreequipo)
-            instance.logoequipo = validated_data.get('logoequipo', instance.logoequipo)
+            if 'nombreequipo' in validated_data:
+                instance.nombreequipo = validated_data['nombreequipo']
+
+            logoequipo = validated_data.get('logoequipo')
+            if isinstance(logoequipo, str) and logoequipo.startswith("data:image"):
+                try:
+                    _, base64_data = logoequipo.split(',', 1)
+                    instance.logoequipo = base64.b64decode(base64_data)
+                except Exception as e:
+                    raise serializers.ValidationError({"error": f"Formato Base64 inválido: {e}"})
+            elif logoequipo is not None:
+                instance.logoequipo = logoequipo
+
             instance.save()
             return instance
-        except ValueError as e:
+        except IntegrityError:
+            raise serializers.ValidationError({
+                "error": f"El equipo con el nombre {instance.nombreequipo} no pudo ser actualizado."
+            })
+        except Exception as e:
             raise serializers.ValidationError({"error": str(e)})
-        except IntegrityError as e:
-            raise serializers.ValidationError({"error": f"El equipo con el nombre {instance.nombreequipo} no pudo ser actualizado."})
-       
 
 
 class PartidoSerializer(serializers.ModelSerializer): # type: ignore
