@@ -1,4 +1,5 @@
 from django.db.models import ProtectedError
+from django.forms import ValidationError
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, permissions
@@ -138,8 +139,10 @@ class TorneoListCreateView(APIView):
                     },
                     status=status.HTTP_201_CREATED
                     )
-            
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+            return Response({"error": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+        except ValidationError as ve:
+            return Response({"error": str(ve)}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
@@ -178,7 +181,7 @@ class TemporadaListCreateView(APIView):
             if serializer.is_valid():
                 temporada = serializer.save()
                 return Response({"mensaje": "Temporada creada correctamente", "temporada": serializer.data}, status=status.HTTP_201_CREATED)
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
@@ -221,7 +224,7 @@ class TorneoPartidoListCreateView(APIView):
                     {"mensaje": "Partido asignado al torneo correctamente", "relacion": serializer.data},
                     status=status.HTTP_201_CREATED
                 )
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -265,7 +268,7 @@ class EquipoUpdateView(APIView):
             if serializer.is_valid():
                 serializer.save()
                 return Response({"mensaje": "Equipo actualizado correctamente", "equipo": serializer.data})
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
