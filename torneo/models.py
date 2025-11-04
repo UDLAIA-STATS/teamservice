@@ -1,12 +1,17 @@
+from django import db
 from django.db import models
 
 class Equipo(models.Model):
+    
     idequipo = models.AutoField(primary_key=True)
     nombreequipo = models.CharField(max_length=100, unique=True)
     logoequipo = models.ImageField(upload_to='logos/', null=True, blank=True)
 
     def __str__(self):
         return self.nombreequipo
+    
+    class Meta:
+        db_table='Equipo'
 
 
 class Partido(models.Model):
@@ -23,6 +28,9 @@ class Partido(models.Model):
     def __str__(self):
         return f"{self.idequipolocal} vs {self.idequipovisitante} ({self.fechapartido})"
 
+    class Meta:
+        db_table='Partido'
+
 
 class Torneo(models.Model):
     idtorneo = models.AutoField(primary_key=True)
@@ -32,6 +40,9 @@ class Torneo(models.Model):
     def __str__(self):
         return self.nombretorneo
 
+    class Meta:
+        db_table='Torneo'
+
 
 class TorneoPartido(models.Model):
     idtorneo = models.ForeignKey(Torneo, on_delete=models.CASCADE)
@@ -39,6 +50,7 @@ class TorneoPartido(models.Model):
 
     class Meta:
         unique_together = ('idtorneo', 'idpartido')
+        db_table='TorneoPartido'
 
     def __str__(self):
         return f"{self.idtorneo.nombretorneo} - Partido {self.idpartido.idpartido}"
@@ -49,6 +61,9 @@ class Temporada(models.Model):
     nombretemporada = models.CharField(max_length=100)
     tipotemporada = models.BooleanField()  # True = Apertura / False = Clausura
     idtorneo = models.ForeignKey(Torneo, on_delete=models.CASCADE)
+
+    class Meta:
+        db_table='Temporada'
 
     def __str__(self):
         return f"{self.nombretemporada} ({self.idtorneo.nombretorneo})"
