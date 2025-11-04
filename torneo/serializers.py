@@ -1,223 +1,132 @@
 import base64
 from django.db import IntegrityError
 from rest_framework import serializers
-from .models import Equipo, Partido, Torneo, TorneoPartido, Temporada
+from .models import (
+    Institucion,
+    Equipo,
+    Torneo,
+    Temporada,
+    Partido
+)
 
 
-import base64
-from django.db import IntegrityError
-from rest_framework import serializers
-from .models import Equipo
+# ============================================================
+# INSTITUCIÓN
+# ============================================================
+class InstitucionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Institucion
+        fields = ['idinstitucion', 'nombreinstitucion', 'institucionactiva']
 
+    def validate_nombreinstitucion(self, value):
+        if self.instance is None and Institucion.objects.filter(nombreinstitucion=value).exists():
+            raise serializers.ValidationError("Ya existe una institución con ese nombre.")
+        return value
+
+
+# ============================================================
+# EQUIPO
+# ============================================================
 class EquipoSerializer(serializers.ModelSerializer):
+    institucion_nombre = serializers.StringRelatedField(source='idinstitucion', read_only=True)
+
     class Meta:
         model = Equipo
-        fields = ['idequipo', 'nombreequipo', 'logoequipo']
+        fields = ['idequipo', 'nombreequipo', 'imagenequipo', 'equipoactivo', 'idinstitucion', 'institucion_nombre']
+
+    def validate_nombreequipo(self, value):
+        if self.instance is None and Equipo.objects.filter(nombreequipo=value).exists():
+            raise serializers.ValidationError("Ya existe un equipo con ese nombre.")
+        return value
+
+    def to_internal_value(self, data):
+        """Permite recibir imagen en base64."""
+        internal = super().to_internal_value(data)
+        imagen = data.get('imagenequipo')
+        if isinstance(imagen, str) and imagen.startswith("data:image"):
+            try:
+                _, base64_data = imagen.split(',', 1)
+                internal['imagenequipo'] = base64.b64decode(base64_data)
+            except Exception:
+                raise serializers.ValidationError({"imagenequipo": "Formato Base64 inválido."})
+        return internal
+
+
+# ============================================================
+# TEMPORADA
+# ============================================================
+class TemporadaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Temporada
+        fields = [
+            'idtemporada',
+            'nombretemporada',
+            'descripciontemporada',
+            'tipotemporada',
+            'fechainiciotemporada',
+            'fechafintemporada',
+            'temporadaactiva'
+        ]
 
     def validate(self, attrs):
-        # Evitar duplicados en la creación
-        nombre = attrs.get("nombreequipo")
-        if self.instance is None and Equipo.objects.filter(nombreequipo=nombre).exists():
-            raise serializers.ValidationError("Ya existe un equipo con ese nombre.")
+        nombre = attrs.get("nombretemporada")
+        if self.instance is None and Temporada.objects.filter(nombretemporada=nombre).exists():
+            raise serializers.ValidationError("Ya existe una temporada con ese nombre.")
         return attrs
 
-    def create(self, validated_data):
-        try:
-            # Decodificar imagen si viene en base64
-            logoequipo = validated_data.get('logoequipo')
-            if isinstance(logoequipo, str) and logoequipo.startswith("data:image"):
-                header, base64_data = logoequipo.split(',', 1)
-                validated_data['logoequipo'] = base64.b64decode(base64_data)
 
-            equipo = Equipo.objects.create(**validated_data)
-            return equipo
-        except IntegrityError:
-            raise serializers.ValidationError({
-                "error": f"Ya existe un equipo con el nombre: {validated_data.get('nombreequipo')}"
-            })
-        except Exception as e:
-            raise serializers.ValidationError({"error": str(e)})
+# ============================================================
+# TORNEO
+# ============================================================
+class TorneoSerializer(serializers.ModelSerializer):
+    temporada_nombre = serializers.StringRelatedField(source='idtemporada', read_only=True)
 
-    def update(self, instance, validated_data):
-        try:
-            if 'nombreequipo' in validated_data:
-                instance.nombreequipo = validated_data['nombreequipo']
+    class Meta:
+        model = Torneo
+        fields = [
+            'idtorneo',
+            'nombretorneo',
+            'descripciontorneo',
+            'fechainiciotorneo',
+            'fechafintorneo',
+            'torneoactivo',
+            'idtemporada',
+            'temporada_nombre'
+        ]
 
-            logoequipo = validated_data.get('logoequipo')
-            if isinstance(logoequipo, str) and logoequipo.startswith("data:image"):
-                try:
-                    _, base64_data = logoequipo.split(',', 1)
-                    instance.logoequipo = base64.b64decode(base64_data)
-                except Exception as e:
-                    raise serializers.ValidationError({"error": f"Formato Base64 inválido: {e}"})
-            elif logoequipo is not None:
-                instance.logoequipo = logoequipo
-
-            instance.save()
-            return instance
-        except IntegrityError:
-            raise serializers.ValidationError({
-                "error": f"El equipo con el nombre {instance.nombreequipo} no pudo ser actualizado."
-            })
-        except Exception as e:
-            raise serializers.ValidationError({"error": str(e)})
+    def validate_nombretorneo(self, value):
+        if self.instance is None and Torneo.objects.filter(nombretorneo=value).exists():
+            raise serializers.ValidationError("Ya existe un torneo con ese nombre.")
+        return value
 
 
-class PartidoSerializer(serializers.ModelSerializer): # type: ignore
-    equipo_local = serializers.StringRelatedField(source='idequipolocal', read_only=True)
-    equipo_visitante = serializers.StringRelatedField(source='idequipovisitante', read_only=True)
+# ============================================================
+# PARTIDO
+# ============================================================
+class PartidoSerializer(serializers.ModelSerializer):
+    equipo_local_nombre = serializers.StringRelatedField(source='idequipolocal', read_only=True)
+    equipo_visitante_nombre = serializers.StringRelatedField(source='idequipovisitante', read_only=True)
+    torneo_nombre = serializers.StringRelatedField(source='idtorneo', read_only=True)
+    temporada_nombre = serializers.StringRelatedField(source='idtemporada', read_only=True)
 
     class Meta:
         model = Partido
         fields = [
             'idpartido',
+            'fechapartido',
             'marcadorequipolocal',
             'marcadorequipovisitante',
-            'fechapartido',
-            'tipopartido',
             'idequipolocal',
             'idequipovisitante',
-            'equipo_local',
-            'equipo_visitante'
+            'idtorneo',
+            'idtemporada',
+            'equipo_local_nombre',
+            'equipo_visitante_nombre',
+            'torneo_nombre',
+            'temporada_nombre'
         ]
 
     def validate(self, attrs):
-        # Evita que el mismo equipo sea local y visitante
         if attrs.get('idequipolocal') == attrs.get('idequipovisitante'):
-            raise serializers.ValidationError("Un equipo no puede jugar contra sí mismo.") # type: ignore
+            raise serializers.ValidationError("Un equipo no puede enfrentarse a sí mismo.")
         return attrs
-    
-    def create(self, validated_data):
-        try:
-            partido = Partido.objects.create(
-                marcadorequipolocal=validated_data.get('marcadorequipolocal'),
-                marcadorequipovisitante=validated_data.get('marcadorequipovisitante'),
-                fechapartido=validated_data.get('fechapartido'),
-                tipopartido=validated_data.get('tipopartido'),
-                idequipolocal=validated_data.get('idequipolocal'),
-                idequipovisitante=validated_data.get('idequipovisitante')
-            )
-            return partido
-        except ValueError as e:
-            raise serializers.ValidationError({"error": str(e)})
-        except IntegrityError as e:
-            raise serializers.ValidationError({"error": "No se pudo crear el partido debido a un conflicto de integridad."})
-
-    def update(self, instance, validated_data):
-        try:
-            instance.marcadorequipolocal = validated_data.get('marcadorequipolocal', instance.marcadorequipolocal)
-            instance.marcadorequipovisitante = validated_data.get('marcadorequipovisitante', instance.marcadorequipovisitante)
-            instance.fechapartido = validated_data.get('fechapartido', instance.fechapartido)
-            instance.tipopartido = validated_data.get('tipopartido', instance.tipopartido)
-            instance.idequipolocal = validated_data.get('idequipolocal', instance.idequipolocal)
-            instance.idequipovisitante = validated_data.get('idequipovisitante', instance.idequipovisitante)
-            instance.save()
-            return instance
-        except ValueError as e:
-            raise serializers.ValidationError({"error": str(e)})
-        except IntegrityError as e:
-            raise serializers.ValidationError({"error": "No se pudo actualizar el partido debido a un conflicto de integridad."})
-
-
-class TorneoSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Torneo
-        fields = ['idtorneo', 'nombretorneo', 'descripciontorneo']
-
-    def validate(self, attrs):
-        if self.instance is None and Torneo.objects.filter(nombretorneo=attrs).exists():
-            raise serializers.ValidationError("Ya existe un torneo con ese nombre.")
-        return attrs
-    
-    def create(self, validated_data):
-        try:
-            torneo = Torneo.objects.create(
-                nombretorneo=validated_data.get('nombretorneo'),
-                descripciontorneo=validated_data.get('descripciontorneo')
-            )
-            return torneo
-        except ValueError as e:
-            raise serializers.ValidationError({"error": str(e)})
-        except IntegrityError as e:
-            raise serializers.ValidationError({"error": f"Ya existe un torneo con el nombre: {validated_data.get('nombretorneo')}"})
-        
-    def update(self, instance, validated_data):
-        try:
-            instance.nombretorneo = validated_data.get('nombretorneo', instance.nombretorneo)
-            instance.descripciontorneo = validated_data.get('descripciontorneo', instance.descripciontorneo)
-            instance.save()
-            return instance
-        except ValueError as e:
-            raise serializers.ValidationError({"error": str(e)})
-        except IntegrityError as e:
-            raise serializers.ValidationError({"error": f"El torneo con el nombre {instance.nombretorneo} no pudo ser actualizado."})
-
-
-class TemporadaSerializer(serializers.ModelSerializer):
-    torneo_nombre = serializers.StringRelatedField(source='idtorneo', read_only=True)
-
-    class Meta:
-        model = Temporada
-        fields = ['idtemporada', 'nombretemporada', 'tipotemporada', 'idtorneo', 'torneo_nombre']
-
-    def validate(self, attrs):
-        # Evita duplicar nombre dentro del mismo torneo
-        torneo = attrs.get('idtorneo')
-        nombre = attrs.get('nombretemporada')
-        if self.instance is None and Temporada.objects.filter(nombretemporada=nombre, idtorneo=torneo).exists():
-            raise serializers.ValidationError("Ya existe una temporada con ese nombre en el torneo seleccionado.")
-        return attrs
-    
-    def create(self, validated_data):
-        try:
-            temporada = Temporada.objects.create(
-                nombretemporada=validated_data.get('nombretemporada'),
-                tipotemporada=validated_data.get('tipotemporada'),
-                idtorneo=validated_data.get('idtorneo')
-            )
-            return temporada
-        except ValueError as e:
-            raise serializers.ValidationError({"error": str(e)})
-        except IntegrityError as e:
-            raise serializers.ValidationError({"error": "No se pudo crear la temporada debido a un conflicto de integridad."})
-
-
-class TorneoPartidoSerializer(serializers.ModelSerializer):
-    torneo = serializers.StringRelatedField(source='idtorneo', read_only=True)
-    partido = serializers.StringRelatedField(source='idpartido', read_only=True)
-
-    class Meta:
-        model = TorneoPartido
-        fields = ['idtorneo', 'idpartido', 'torneo', 'partido']
-
-    def validate(self, attrs):
-        # Evita registrar un partido dos veces en el mismo torneo
-        if TorneoPartido.objects.filter(
-            idtorneo=attrs['idtorneo'],
-            idpartido=attrs['idpartido']
-        ).exists():
-            raise serializers.ValidationError("Ese partido ya está asignado a este torneo.")
-        return attrs
-    
-    def create(self, validated_data):
-        try:
-            torneo_partido = TorneoPartido.objects.create(
-                idtorneo=validated_data.get('idtorneo'),
-                idpartido=validated_data.get('idpartido')
-            )
-            return torneo_partido
-        except ValueError as e:
-            raise serializers.ValidationError({"error": str(e)})
-        except IntegrityError as e:
-            raise serializers.ValidationError({"error": "No se pudo asignar el partido al torneo debido a un conflicto de integridad."})
-        
-    def update(self, instance, validated_data):
-        try:
-            instance.idtorneo = validated_data.get('idtorneo', instance.idtorneo)
-            instance.idpartido = validated_data.get('idpartido', instance.idpartido)
-            instance.save()
-            return instance
-        except ValueError as e:
-            raise serializers.ValidationError({"error": str(e)})
-        except IntegrityError as e:
-            raise serializers.ValidationError({"error": "No se pudo actualizar la asignación debido a un conflicto de integridad."})

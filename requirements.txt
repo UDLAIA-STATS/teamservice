@@ -19,3 +19,4 @@ python-decouple==3.8
 sqlparse==0.5.3; python_version >= '3.8'
 tomlkit==0.13.3; python_version >= '3.8'
 tzdata==2025.2; python_version >= '2'
+confluent-kafka==2.12.1; python_version >= '3.7'
