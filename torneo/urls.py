@@ -8,6 +8,13 @@ from .views import (
     EquipoUpdateView,
     EquipoDeleteView,
 
+    # INSTITUCIÓN
+    InstitucionListCreateView,
+    InstitucionDetailView,
+    InstitucionAllView,
+    InstitucionUpdateView,
+    InstitucionDeleteView,
+
     # PARTIDO
     PartidoListCreateView,
     PartidoDetailView,
@@ -59,4 +66,11 @@ urlpatterns = [
     path('temporadas/<int:pk>/', TemporadaDetailView.as_view(), name='temporada-detail'),
     path('temporadas/<int:pk>/update/', TemporadaUpdateView.as_view(), name='temporada-update'),
     path('temporadas/<int:pk>/delete/', TemporadaDeleteView.as_view(), name='temporada-delete'),
+
+    # ================= INSTITUCIONES =================
+    path('instituciones/', InstitucionListCreateView.as_view(), name='institucion-list-create'),
+    path('instituciones/all/', InstitucionAllView.as_view(), name='institucion-all'),
+    path('instituciones/<int:pk>/', InstitucionDetailView.as_view(), name='institucion-detail'),
+    path('instituciones/<int:pk>/update/', InstitucionUpdateView.as_view(), name='institucion-update'),
+    path('instituciones/<int:pk>/delete/', InstitucionDeleteView.as_view(), name='institucion-delete'),
 ]

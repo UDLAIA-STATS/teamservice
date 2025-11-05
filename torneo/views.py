@@ -5,12 +5,13 @@ from rest_framework.response import Response
 from rest_framework import status
 from math import ceil
 
-from .models import Equipo, Partido, Torneo, Temporada
+from .models import Equipo, Institucion, Partido, Torneo, Temporada
 from .serializers import (
     EquipoSerializer,
     PartidoSerializer,
     TorneoSerializer,
     TemporadaSerializer,
+    InstitucionSerializer
 )
 
 
@@ -39,6 +40,73 @@ def paginate_queryset(queryset, serializer_class, request):
         "results": serializer.data,
     }
 
+
+# ================================
+# INSTITUCIÓN VIEWS
+# ================================
+
+class InstitucionListCreateView(APIView):
+    def post(self, request):
+        serializer = InstitucionSerializer(data=request.data)
+        if serializer.is_valid():
+            try:
+                institucion = serializer.save()
+                return Response(
+                    {
+                        "mensaje": "Institución creada correctamente",
+                        "institucion": InstitucionSerializer(institucion).data
+                    },
+                    status=status.HTTP_201_CREATED
+                )
+            except IntegrityError:
+                return Response(
+                    {"error": "Ya existe una institución con ese nombre"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class InstitucionDetailView(APIView):
+    def get(self, request, pk):
+        institucion = Institucion.objects.filter(pk=pk).first()
+        if not institucion:
+            return Response({"error": "Institución no encontrada"}, status=status.HTTP_404_NOT_FOUND)
+        return Response(InstitucionSerializer(institucion).data)
+
+
+class InstitucionAllView(APIView):
+    def get(self, request):
+        instituciones = Institucion.objects.all().order_by("idinstitucion")
+        paginated_data = paginate_queryset(instituciones, InstitucionSerializer, request)
+        if "error" in paginated_data:
+            return Response(paginated_data, status=status.HTTP_400_BAD_REQUEST)
+        return Response(paginated_data, status=status.HTTP_200_OK)
+
+
+class InstitucionUpdateView(APIView):
+    def patch(self, request, pk):
+        institucion = Institucion.objects.filter(pk=pk).first()
+        if not institucion:
+            return Response({"error": "Institución no encontrada"}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = InstitucionSerializer(institucion, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({
+                "mensaje": "Institución actualizada correctamente",
+                "institucion": serializer.data
+            })
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class InstitucionDeleteView(APIView):
+    def delete(self, request, pk):
+        institucion = Institucion.objects.filter(pk=pk).first()
+        if not institucion:
+            return Response({"error": "Institución no encontrada"}, status=status.HTTP_404_NOT_FOUND)
+
+        institucion.delete()
+        return Response({"mensaje": "Institución eliminada correctamente"}, status=status.HTTP_200_OK)
 
 # ================================
 # EQUIPO VIEWS
