@@ -54,7 +54,7 @@ class Equipo(models.Model):
     idinstitucion = models.ForeignKey(
         Institucion, on_delete=models.CASCADE, db_column='id_institucion')
     nombreequipo = models.CharField(max_length=250)
-    imagenequipo = models.BinaryField(null=True, blank=True)
+    imagenequipo = models.ImageField(upload_to='equipos/', null=True, blank=True)
     equipoactivo = models.BooleanField(default=True)
 
     class Meta:

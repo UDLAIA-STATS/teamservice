@@ -4,6 +4,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from math import ceil
+from rest_framework.parsers import MultiPartParser, FormParser
 
 from .models import Equipo, Institucion, Partido, Torneo, Temporada
 from .serializers import (
@@ -112,19 +113,17 @@ class InstitucionDeleteView(APIView):
 # EQUIPO VIEWS
 # ================================
 class EquipoListCreateView(APIView):
-    def post(self, request):
-        serializer = EquipoSerializer(data=request.data)
-        if serializer.is_valid():
-            try:
-                equipo = serializer.save()
-                return Response(
-                    {"mensaje": "Equipo creado correctamente", "equipo": EquipoSerializer(equipo).data},
-                    status=status.HTTP_201_CREATED
-                )
-            except IntegrityError:
-                return Response({"error": "Ya existe un equipo con ese nombre"}, status=status.HTTP_400_BAD_REQUEST)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    parser_classes = [MultiPartParser, FormParser]
 
+    def post(self, request):
+        serializer = EquipoSerializer(data=request.data, context={'request': request})
+        if serializer.is_valid():
+            equipo = serializer.save()
+            return Response({
+                "mensaje": "Equipo creado correctamente",
+                "equipo": EquipoSerializer(equipo, context={'request': request}).data
+            }, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class EquipoDetailView(APIView):
     def get_object(self, pk):
@@ -155,17 +154,21 @@ class EquipoAllView(APIView):
 
 
 class EquipoUpdateView(APIView):
+    parser_classes = [MultiPartParser, FormParser]
+
     def patch(self, request, pk):
         equipo = Equipo.objects.filter(pk=pk).first()
         if not equipo:
             return Response({"error": "Equipo no encontrado"}, status=status.HTTP_404_NOT_FOUND)
 
-        serializer = EquipoSerializer(equipo, data=request.data, partial=True)
+        serializer = EquipoSerializer(equipo, data=request.data, partial=True, context={'request': request})
         if serializer.is_valid():
             serializer.save()
-            return Response({"mensaje": "Equipo actualizado correctamente", "equipo": serializer.data})
+            return Response({
+                "mensaje": "Equipo actualizado correctamente",
+                "equipo": serializer.data
+            })
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
 
 class EquipoDeleteView(APIView):
     def delete(self, request, pk):
@@ -294,10 +297,12 @@ class TorneoDeleteView(APIView):
         torneo = Torneo.objects.filter(pk=pk).first()
         if not torneo:
             return Response({"error": "Torneo no encontrado"}, status=status.HTTP_404_NOT_FOUND)
+        
+        partidos = Partido.objects.filter(idtorneo=torneo).exists()
 
-        if Temporada.objects.filter(idtorneo=torneo).exists():
+        if partidos:
             return Response(
-                {"error": "No se puede eliminar el torneo porque tiene temporadas asociadas."},
+                {"error": "No se puede eliminar el torneo porque tiene partidos asociados."},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
@@ -356,8 +361,16 @@ class TemporadaUpdateView(APIView):
 class TemporadaDeleteView(APIView):
     def delete(self, request, pk):
         temporada = Temporada.objects.filter(pk=pk).first()
+        torneos = Torneo.objects.filter(idtemporada=temporada).exists()
+        partidos = Partido.objects.filter(idtemporada=temporada).exists()
         if not temporada:
             return Response({"error": "Temporada no encontrada"}, status=status.HTTP_404_NOT_FOUND)
+
+        if torneos or partidos:
+            return Response(
+                {"error": "No se puede eliminar la temporada porque tiene torneos o partidos asociados."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
         temporada.delete()
         return Response({"mensaje": "Temporada eliminada correctamente"}, status=status.HTTP_200_OK)

@@ -29,7 +29,8 @@ class InstitucionSerializer(serializers.ModelSerializer):
 # ============================================================
 class EquipoSerializer(serializers.ModelSerializer):
     institucion_nombre = serializers.StringRelatedField(source='idinstitucion', read_only=True)
-
+    imagenequipo = serializers.ImageField(required=False, allow_null=True)
+    
     class Meta:
         model = Equipo
         fields = ['idequipo', 'nombreequipo', 'imagenequipo', 'equipoactivo', 'idinstitucion', 'institucion_nombre']
@@ -39,17 +40,17 @@ class EquipoSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Ya existe un equipo con ese nombre.")
         return value
 
-    def to_internal_value(self, data):
-        """Permite recibir imagen en base64."""
-        internal = super().to_internal_value(data)
-        imagen = data.get('imagenequipo')
-        if isinstance(imagen, str) and imagen.startswith("data:image"):
-            try:
-                _, base64_data = imagen.split(',', 1)
-                internal['imagenequipo'] = base64.b64decode(base64_data)
-            except Exception:
-                raise serializers.ValidationError({"imagenequipo": "Formato Base64 inválido."})
-        return internal
+    # def to_internal_value(self, data):
+    #     """Permite recibir imagen en base64."""
+    #     internal = super().to_internal_value(data)
+    #     imagen = data.get('imagenequipo')
+    #     if isinstance(imagen, str) and imagen.startswith("data:image"):
+    #         try:
+    #             _, base64_data = imagen.split(',', 1)
+    #             internal['imagenequipo'] = base64.b64decode(base64_data)
+    #         except Exception:
+    #             raise serializers.ValidationError({"imagenequipo": "Formato Base64 inválido."})
+    #     return internal
 
 
 # ============================================================
