@@ -23,7 +23,7 @@ class Temporada(models.Model):
 class Torneo(models.Model):
     idtorneo = models.AutoField(primary_key=True)
     idtemporada = models.ForeignKey(
-        Temporada, on_delete=models.CASCADE, db_column='id_temporada')
+        Temporada, on_delete=models.CASCADE, db_column='idtemporada')
     nombretorneo = models.CharField(max_length=250, unique=True)
     descripciontorneo = models.CharField(max_length=250)
     fechainiciotorneo = models.DateTimeField()
@@ -52,7 +52,7 @@ class Institucion(models.Model):
 class Equipo(models.Model):
     idequipo = models.AutoField(primary_key=True)
     idinstitucion = models.ForeignKey(
-        Institucion, on_delete=models.CASCADE, db_column='id_institucion')
+        Institucion, on_delete=models.CASCADE, db_column='idinstitucion')
     nombreequipo = models.CharField(max_length=250)
     imagenequipo = models.ImageField(upload_to='equipos/', null=True, blank=True)
     equipoactivo = models.BooleanField(default=True)
@@ -71,13 +71,13 @@ class Partido(models.Model):
     marcadorequipovisitante = models.IntegerField(null=True, blank=True)
 
     idequipolocal = models.ForeignKey(
-        Equipo, related_name='partidos_local', on_delete=models.CASCADE, db_column='id_equipo_local')
+        Equipo, related_name='partidoslocal', on_delete=models.CASCADE, db_column='idequipolocal')
     idequipovisitante = models.ForeignKey(
-        Equipo, related_name='partidos_visitante', on_delete=models.CASCADE, db_column='id_equipo_visitante')
+        Equipo, related_name='partidosvisitante', on_delete=models.CASCADE, db_column='idequipovisitante')
     idtorneo = models.ForeignKey(
-        Torneo, on_delete=models.CASCADE, db_column='id_torneo')
+        Torneo, on_delete=models.CASCADE, db_column='idtorneo')
     idtemporada = models.ForeignKey(
-        Temporada, on_delete=models.CASCADE, db_column='id_temporada')
+        Temporada, on_delete=models.CASCADE, db_column='idtemporada')
 
     class Meta:
         db_table = 'partido'
