@@ -113,7 +113,6 @@ class InstitucionDeleteView(APIView):
 # EQUIPO VIEWS
 # ================================
 class EquipoListCreateView(APIView):
-    parser_classes = [MultiPartParser, FormParser]
 
     def post(self, request):
         serializer = EquipoSerializer(data=request.data, context={'request': request})
@@ -154,8 +153,6 @@ class EquipoAllView(APIView):
 
 
 class EquipoUpdateView(APIView):
-    parser_classes = [MultiPartParser, FormParser]
-
     def patch(self, request, pk):
         equipo = Equipo.objects.filter(pk=pk).first()
         if not equipo:
@@ -169,6 +166,7 @@ class EquipoUpdateView(APIView):
                 "equipo": serializer.data
             })
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 class EquipoDeleteView(APIView):
     def delete(self, request, pk):
