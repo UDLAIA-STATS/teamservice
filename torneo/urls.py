@@ -1,41 +1,5 @@
 from django.urls import path
-from .views import (
-    # EQUIPO
-    EquipoListCreateView,
-    EquipoDetailView,
-    EquipoAllView,
-    EquipoSearchByNameView,
-    EquipoUpdateView,
-    EquipoDeleteView,
-
-    # INSTITUCIÓN
-    InstitucionListCreateView,
-    InstitucionDetailView,
-    InstitucionAllView,
-    InstitucionUpdateView,
-    InstitucionDeleteView,
-
-    # PARTIDO
-    PartidoListCreateView,
-    PartidoDetailView,
-    PartidoAllView,
-    PartidoUpdateView,
-    PartidoDeleteView,
-
-    # TORNEO
-    TorneoListCreateView,
-    TorneoDetailView,
-    TorneoAllView,
-    TorneoUpdateView,
-    TorneoDeleteView,
-
-    # TEMPORADA
-    TemporadaListCreateView,
-    TemporadaDetailView,
-    TemporadaAllView,
-    TemporadaUpdateView,
-    TemporadaDeleteView,
-)
+from torneo.views import *
 
 urlpatterns = [
     # ================= EQUIPOS =================
