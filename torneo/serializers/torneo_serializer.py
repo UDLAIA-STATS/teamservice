@@ -18,6 +18,9 @@ class TorneoSerializer(serializers.ModelSerializer):
         ]
     
     def validate(self, attrs):
+        """
+        Valida la informaci n de un torneo. Verifica que el torneo est  asociado a una temporada y que las fechas de inicio y fin est n dentro del rango de la temporada.
+        """
         temporada = None
 
         if 'idtemporada' in attrs:

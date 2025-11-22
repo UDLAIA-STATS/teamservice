@@ -18,11 +18,21 @@ class EquipoSerializer(serializers.ModelSerializer):
             ]
 
     def validate_nombreequipo(self, value):
+        """
+        Valida que un equipo con el nombre especificado ya existe.
+        """
         if self.instance is None and Equipo.objects.filter(nombreequipo=value).exists():
             raise serializers.ValidationError("Ya existe un equipo con ese nombre.")
         return value
     
     def to_internal_value(self, data):
+        """
+        Convierte el valor de 'imagenequipo' en base64 a bytes.
+        Si el valor es None o una cadena vacía, se deja como None.
+        Si el valor es una cadena que comienza con "data:image", se intenta
+        convertir a bytes. Si no se puede parsear, se devuelve un
+        ValidationError con el mensaje "Formato Base64 inválido.".
+        """
         internal = super().to_internal_value(data)
         imagen = data.get('imagenequipo')
 
@@ -39,6 +49,12 @@ class EquipoSerializer(serializers.ModelSerializer):
         return internal
 
     def to_representation(self, instance):
+        """
+        Convierte una instancia de Equipo en un objeto JSON.
+        Se convierte el campo 'imagenequipo' de bytes a base64
+        para enviar al frontend. Si el campo es None o una cadena
+        vacía, se deja como None.
+        """
         rep = super().to_representation(instance)
         # Convertimos los bytes a base64 para enviar al frontend
         if instance.imagenequipo:

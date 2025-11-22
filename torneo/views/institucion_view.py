@@ -11,6 +11,15 @@ from torneo.utils.responses import *
 
 class InstitucionListCreateView(APIView):
     def post(self, request):
+        """
+        Crea una nueva institución.
+        
+        Parameters:
+        - request (dict): Contiene la información de la institución a crear.
+        
+        Returns:
+        - response (dict): Contiene el mensaje de éxito y la institución creada.
+        """
         serializer = InstitucionSerializer(data=request.data)
         if not serializer.is_valid():
             raise ValidationError(format_serializer_errors(serializer.errors))
@@ -32,6 +41,16 @@ class InstitucionListCreateView(APIView):
 
 class InstitucionDetailView(APIView):
     def get(self, request, pk):
+        """
+        Obtiene una institución por su pk.
+        
+        Parameters:
+        - request (dict): Contiene la información de la petición.
+        - pk (int): Pk de la institución a obtener.
+        
+        Returns:
+        - response (dict): Contiene el mensaje de éxito y la institución obtenida.
+        """
         institucion = Institucion.objects.filter(pk=pk).first()
         if not institucion:
             return error_response(message="Institución no encontrada", data=None, status=status.HTTP_404_NOT_FOUND)
@@ -40,6 +59,12 @@ class InstitucionDetailView(APIView):
 
 class InstitucionAllView(APIView):
     def get(self, request):
+        """
+        Obtiene todas las instituciones.
+        
+        Returns:
+        - response (dict): Contiene el mensaje de éxito y las instituciones encontradas.
+        """
         instituciones = Institucion.objects.all().order_by("idinstitucion")
         paginated_data = paginate_queryset(instituciones, InstitucionSerializer, request)
         if "error" in paginated_data:
@@ -49,6 +74,16 @@ class InstitucionAllView(APIView):
 
 class InstitucionUpdateView(APIView):
     def patch(self, request, pk):
+        """
+        Actualiza una institución existente.
+        
+        Parameters:
+        - request (dict): Contiene la información de la petición.
+        - pk (int): Pk de la institución a actualizar.
+        
+        Returns:
+        - response (dict): Contiene el mensaje de éxito y la institución actualizada.
+        """
         institucion = Institucion.objects.filter(pk=pk).first()
         if not institucion:
             return error_response(message="Institución no encontrada", data=None, status=status.HTTP_404_NOT_FOUND)
@@ -63,6 +98,16 @@ class InstitucionUpdateView(APIView):
 
 class InstitucionDeleteView(APIView):
     def delete(self, request, pk):
+        """
+        Elimina una institución por su pk.
+        
+        Parameters:
+        - request (dict): Contiene la información de la petición.
+        - pk (int): Pk de la institución a eliminar.
+        
+        Returns:
+        - response (dict): Contiene el mensaje de éxito y la institución eliminada.
+        """
         institucion = Institucion.objects.filter(pk=pk).first()
         if not institucion:
             return error_response(message="Institución no encontrada", data=None, status=status.HTTP_404_NOT_FOUND)

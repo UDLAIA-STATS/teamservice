@@ -15,14 +15,15 @@ class PartidoTests(TestCase):
             nombretemporada="Temp P",
             descripciontemporada="Desc",
             tipotemporada="Oficial",
-            fechainiciotemporada=datetime.now(),
+            fechainiciotemporada=datetime.now() - timedelta(days=5),
             fechafintemporada=datetime.now() + timedelta(days=10)
         )
+
         self.torneo = Torneo.objects.create(
             idtemporada=self.temp,
             nombretorneo="Torneo P",
             descripciontorneo="Desc",
-            fechainiciotorneo=datetime.now(),
+            fechainiciotorneo=datetime.now() - timedelta(days=2),
             fechafintorneo=datetime.now() + timedelta(days=4),
         )
         self.equipo1 = Equipo.objects.create(
@@ -35,7 +36,7 @@ class PartidoTests(TestCase):
         )
 
         self.data = {
-            "fechapartido": datetime.now().isoformat(),
+            "fechapartido": datetime.now(),
             "idequipolocal": self.equipo1.idequipo,
             "idequipovisitante": self.equipo2.idequipo,
             "idtorneo": self.torneo.idtorneo,
@@ -68,9 +69,13 @@ class PartidoTests(TestCase):
             idtemporada=self.temp,
         )
         url = reverse("partido-update", args=[partido.idpartido])
-        response = self.client.patch(url, {"marcadorequipolocal": 4}, format="json")
+        response = self.client.patch(url, {
+            "marcadorequipolocal": 4,
+            "marcadorequipovisitante": 2,
+            "fechapartido": datetime.now(),
+        }, format="json")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-
+ 
     def test_eliminar_partido(self):
         partido = Partido.objects.create(
             fechapartido=datetime.now(),

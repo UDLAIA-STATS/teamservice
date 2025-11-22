@@ -15,6 +15,11 @@ class TemporadaSerializer(serializers.ModelSerializer):
         ]
 
     def validate(self, attrs):
+        """
+        Valida que no existe una temporada con el nombre especificado.
+        Llevanta una excepcion si ya existe una temporada con ese nombre.
+        """
+        
         nombre = attrs.get("nombretemporada")
         if self.instance is None and Temporada.objects.filter(nombretemporada=nombre).exists():
             raise serializers.ValidationError("Ya existe una temporada con ese nombre.")
