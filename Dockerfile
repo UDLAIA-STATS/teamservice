@@ -18,5 +18,5 @@ RUN chmod +x /app/entrypoint.sh
 
 EXPOSE 8020
 
-# EntryPoint del contenedor API
 CMD ["/app/entrypoint.sh"]
+
