@@ -115,10 +115,10 @@ class TemporadaDeleteView(APIView):
         - response (dict): Contiene el mensaje de exito y la temporada eliminada.
         """
         temporada = Temporada.objects.filter(pk=pk).first()
-        torneos = Torneo.objects.filter(idtemporada=temporada).exists()
-        partidos = Partido.objects.filter(idtemporada=temporada).exists()
         if not temporada:
             return error_response(message="Temporada no encontrada", data=None, status=status.HTTP_404_NOT_FOUND)
+        torneos = Torneo.objects.filter(idtemporada=temporada).exists()
+        partidos = Partido.objects.filter(idtemporada=temporada).exists()
 
         if torneos or partidos:
             return error_response(
