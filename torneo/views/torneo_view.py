@@ -15,7 +15,7 @@ class TorneoListCreateView(APIView):
         Crea un nuevo torneo.
         
         Parameters:
-        - request (dict): Contiene la informaci n del torneo a crear.
+        - request (dict): Contiene la información del torneo a crear.
         
         Returns:
         - response (dict): Contiene el mensaje de exito y el torneo creado.
@@ -52,7 +52,7 @@ class TorneoDetailView(APIView):
         Obtiene un torneo por su pk.
         
         Parameters:
-        - request (dict): Contiene la informaci n de la petici n.
+        - request (dict): Contiene la información de la petición.
         - pk (int): Identificador del torneo a obtener.
         
         Returns:
@@ -85,7 +85,7 @@ class TorneoUpdateView(APIView):
         Actualiza un torneo existente.
         
         Parameters:
-        - request (dict): Contiene la informaci n del torneo a actualizar.
+        - request (dict): Contiene la información del torneo a actualizar.
         - pk (int): Pk del torneo a actualizar.
         
         Returns:
@@ -114,7 +114,7 @@ class TorneoDeleteView(APIView):
         Elimina un torneo existente.
 
         Parameters:
-        - request (dict): Contiene la informaci n de la petici n.
+        - request (dict): Contiene la información de la petición.
         - pk (int): Identificador del torneo a eliminar.
 
         Returns:
