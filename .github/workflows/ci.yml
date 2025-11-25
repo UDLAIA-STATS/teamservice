@@ -50,11 +50,11 @@ jobs:
 
       - name: Verify wal_level
         env:
-          PGPASSWORD: ${{ env.POSTGRES_PASSWORD }}
-          PGUSER: ${{ env.POSTGRES_USER }}
-          PGDATABASE: ${{ env.POSTGRES_DB }}
-          PGPORT: 5440
-        run: psql -h localhost -U $PGUSER -d $PGDATABASE -p $PGPORT -c "SHOW wal_level;"
+          POSTGRES_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
+          POSTGRES_USER: ${{ env.POSTGRES_USER }}
+          POSTGRES_DB: ${{ env.POSTGRES_DB }}
+          POSTGRES_PORT: 5440
+        run: psql -h localhost -U $POSTGRES_USER -d $POSTGRES_DB -p $POSTGRES_PORT -c "SHOW wal_level;"
 
       - name: Install dependencies
         run: |
