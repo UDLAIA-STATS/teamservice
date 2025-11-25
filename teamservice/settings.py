@@ -14,7 +14,7 @@ from pathlib import Path
 from decouple import config
 from django.core.management.commands.runserver import Command as rs
 
-rs.default_port = 8020
+rs.default_port = config('API_PORT', default=8020, cast=int)
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 MEDIA_URL = '/media/'
@@ -79,14 +79,14 @@ WSGI_APPLICATION = 'teamservice.wsgi.application'
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': config('DATABASE_NAME', cast=str),
-        'USER': config('DATABASE_USER', cast=str),
-        'PASSWORD': config('DATABASE_PASSWORD', cast=str),
-        'HOST': config('DATABASE_HOST', cast=str),
-        'PORT': config('DATABASE_PORT', cast=int)
-    }
+        'default': {
+            'ENGINE': config('DB_ENGINE', default='django.db.backends.postgresql'),
+            'NAME': config('POSTGRES_DB'),
+            'USER': config('POSTGRES_USER', default='postgres'),
+            'PASSWORD': config('POSTGRES_PASSWORD'),
+            'HOST': config('POSTGRES_HOST', default='localhost'),
+            'PORT': config('POSTGRES_PORT', default='5432')
+        }
 }
 
 
