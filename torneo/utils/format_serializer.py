@@ -1,6 +1,3 @@
-from typing import Any
-from rest_framework.utils.serializer_helpers import ReturnDict, ReturnList
-
 def format_serializer_errors(errors):
     if isinstance(errors, dict):
         formatted = {}

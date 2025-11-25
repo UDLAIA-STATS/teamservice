@@ -14,7 +14,7 @@ class TemporadaListCreateView(APIView):
         Crea una nueva temporada.
         
         Parameters:
-        - request (dict): Contiene la informaci n de la temporada a crear.
+        - request (dict): Contiene la información de la temporada a crear.
         
         Returns:
         - response (dict): Contiene el mensaje de exito y la temporada creada.
@@ -50,7 +50,7 @@ class TemporadaDetailView(APIView):
         Obtiene una temporada por su pk.
         
         Parameters:
-        - request (dict): Contiene la informaci n de la petici n.
+        - request (dict): Contiene la información de la petición.
         - pk (int): Pk de la temporada a obtener.
         
         Returns:
@@ -84,7 +84,7 @@ class TemporadaUpdateView(APIView):
         Actualiza una temporada existente.
         
         Parameters:
-        - request (dict): Contiene la informaci n de la petici n.
+        - request (dict): Contiene la información de la petición.
         - pk (int): Pk de la temporada a actualizar.
         
         Returns:
@@ -108,19 +108,16 @@ class TemporadaDeleteView(APIView):
         Elimina una temporada por su pk.
 
         Parameters:
-        - request (dict): Contiene la informaci n de la petici n.
+        - request (dict): Contiene la información de la petición.
         - pk (int): Pk de la temporada a eliminar.
 
         Returns:
         - response (dict): Contiene el mensaje de exito y la temporada eliminada.
         """
         temporada = Temporada.objects.filter(pk=pk).first()
-        torneos = Torneo.objects.filter(idtemporada=temporada).exists()
-        partidos = Partido.objects.filter(idtemporada=temporada).exists()
         if not temporada:
             return error_response(message="Temporada no encontrada", data=None, status=status.HTTP_404_NOT_FOUND)
-
-        if torneos or partidos:
+        if Torneo.objects.filter(idtemporada=temporada).exists() or Partido.objects.filter(idtemporada=temporada).exists():
             return error_response(
                 message="No se puede eliminar la temporada porque tiene torneos o partidos asociados.",
                 data=None,
