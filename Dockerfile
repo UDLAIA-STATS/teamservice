@@ -62,8 +62,6 @@ COPY --chown=app:app . .
 RUN mkdir -p /app/static /app/media /app/logs
 
 # Copiar y configurar script de entrada
-COPY --chown=app:app docker/entrypoint_team.sh /app/entrypoint.sh
-RUN chmod +x /app/entrypoint.sh
 
 # Health check para verificar que el servicio está funcionando
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
