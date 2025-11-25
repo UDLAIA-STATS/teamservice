@@ -37,11 +37,11 @@ Crear un archivo `.env` en la raíz del proyecto basado en `.env.template`:
 ```bash
 DEBUG=True
 SECRET_KEY=tu-secret-key-aqui
-DATABASE_NAME=teamservice_db
-DATABASE_USER=postgres
-DATABASE_PASSWORD=tu-password
-DATABASE_HOST=localhost
-DATABASE_PORT=5432
+POSTGRES_NAME=teamservice_db
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=tu-password
+POSTGRES_HOST=localhost
+POSTGRES_PORT=5432
 API_PORT=8020
 ALLOWED_HOSTS=localhost,127.0.0.1
 FRONTEND_URL=http://localhost:3000
