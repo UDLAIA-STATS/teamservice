@@ -1,4 +1,4 @@
-from typing import Any, Literal
+from typing import Any
 from rest_framework.response import Response
 
 def success_response(message: str, data: Any, status) -> Response:
