@@ -17,7 +17,7 @@ env:
 jobs:
   tests:
     runs-on: ubuntu-latest
-    name: Ejecutar pruebas Django con base de datos en memoria
+    name: Ejecutar pruebas Django con PostgreSQL
 
     services:
       postgres:
