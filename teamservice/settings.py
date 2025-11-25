@@ -14,7 +14,7 @@ from pathlib import Path
 from decouple import config
 from django.core.management.commands.runserver import Command as rs
 
-rs.default_port = config('API_PORT', default='8020')
+rs.default_port = config('API_PORT', default=8020, cast=int)
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 MEDIA_URL = '/media/'
