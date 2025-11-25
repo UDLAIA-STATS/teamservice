@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from torneo.models import Torneo, Temporada
+from torneo.models import Torneo
 
 class TorneoSerializer(serializers.ModelSerializer):
     temporada_nombre = serializers.StringRelatedField(source='idtemporada', read_only=True)
