@@ -29,7 +29,7 @@ jobs:
         ports:
           - 5440:5432
         options: >-
-          --health-cmd="pg_isready -U ${{ env.POSTGRES_USER }} -d ${{ env.POSTGRES_DB }}"
+          --health-cmd="pg_isready -U django -d django_db"
           --health-interval=10s
           --health-timeout=5s
           --health-retries=5
