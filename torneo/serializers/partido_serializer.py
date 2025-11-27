@@ -6,6 +6,7 @@ class PartidoSerializer(serializers.ModelSerializer):
     equipo_visitante_nombre = serializers.StringRelatedField(source='idequipovisitante', read_only=True)
     torneo_nombre = serializers.StringRelatedField(source='idtorneo', read_only=True)
     temporada_nombre = serializers.StringRelatedField(source='idtemporada', read_only=True)
+    partidosubido = serializers.BooleanField(default=False)
 
     class Meta:
         model = Partido
@@ -21,7 +22,8 @@ class PartidoSerializer(serializers.ModelSerializer):
             'equipo_local_nombre',
             'equipo_visitante_nombre',
             'torneo_nombre',
-            'temporada_nombre'
+            'temporada_nombre',
+            'partidosubido'
         ]
 
     def validate(self, attrs):
@@ -48,12 +50,21 @@ class PartidoSerializer(serializers.ModelSerializer):
         # Torneo y fecha
         torneo = self.instance.idtorneo if self.instance else attrs.get('idtorneo')
         fecha_partido = attrs.get('fechapartido', self.instance.fechapartido if self.instance else None)
-
+        
         if torneo and fecha_partido:
             if not (torneo.fechainiciotorneo <= fecha_partido <= torneo.fechafintorneo):
                 raise serializers.ValidationError("La fecha del partido debe estar dentro del rango del torneo.")
+            partidos = Partido.objects.filter(
+                fechapartido=fecha_partido,
+            )
+            for partido in partidos:
+                if (partido.idequipolocal == equipo_local or partido.idequipovisitante == equipo_local or
+                    partido.idequipolocal == equipo_visitante or partido.idequipovisitante == equipo_visitante):
+                    raise serializers.ValidationError("Un equipo no puede tener más de un partido en la misma fecha.")
 
         if not equipo_local and not equipo_visitante:
             raise serializers.ValidationError("Debe especificar al menos un equipo (local o visitante).")
+        
+
 
         return attrs
