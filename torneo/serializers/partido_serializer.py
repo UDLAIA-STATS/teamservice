@@ -6,6 +6,7 @@ class PartidoSerializer(serializers.ModelSerializer):
     equipo_visitante_nombre = serializers.StringRelatedField(source='idequipovisitante', read_only=True)
     torneo_nombre = serializers.StringRelatedField(source='idtorneo', read_only=True)
     temporada_nombre = serializers.StringRelatedField(source='idtemporada', read_only=True)
+    partidosubido = serializers.BooleanField(default=False)
 
     class Meta:
         model = Partido
@@ -21,7 +22,8 @@ class PartidoSerializer(serializers.ModelSerializer):
             'equipo_local_nombre',
             'equipo_visitante_nombre',
             'torneo_nombre',
-            'temporada_nombre'
+            'temporada_nombre',
+            'partidosubido'
         ]
 
     def validate(self, attrs):

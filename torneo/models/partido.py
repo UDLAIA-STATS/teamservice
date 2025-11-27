@@ -9,6 +9,7 @@ class Partido(models.Model):
     fechapartido = models.DateTimeField()
     marcadorequipolocal = models.IntegerField(null=True, blank=True)
     marcadorequipovisitante = models.IntegerField(null=True, blank=True)
+    partidosubido = models.BooleanField(default=False)
 
     idequipolocal = models.ForeignKey(
         Equipo, related_name='partidoslocal', on_delete=models.CASCADE, db_column='idequipolocal')
