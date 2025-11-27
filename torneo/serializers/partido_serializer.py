@@ -57,6 +57,8 @@ class PartidoSerializer(serializers.ModelSerializer):
             partidos = Partido.objects.filter(
                 fechapartido=fecha_partido,
             )
+            if self.instance:
+                partidos = partidos.exclude(idpartido=self.instance.idpartido)
             for partido in partidos:
                 if (partido.idequipolocal == equipo_local or partido.idequipovisitante == equipo_local or
                     partido.idequipolocal == equipo_visitante or partido.idequipovisitante == equipo_visitante):
