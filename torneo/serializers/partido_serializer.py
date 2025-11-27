@@ -56,10 +56,10 @@ class PartidoSerializer(serializers.ModelSerializer):
             if not (torneo.fechainiciotorneo <= fecha_partido <= torneo.fechafintorneo):
                 raise serializers.ValidationError("La fecha del partido debe estar dentro del rango del torneo.")
             conflicting_partidos = Partido.objects.filter(
-                fechapartido=fecha_partido
-            ).filter(
-                Q(idequipolocal=equipo_local) | Q(idequipovisitante=equipo_local) |
-                Q(idequipolocal=equipo_visitante) | Q(idequipovisitante=equipo_visitante)
+                Q(fechapartido=fecha_partido) & (
+                    Q(idequipolocal=equipo_local) | Q(idequipovisitante=equipo_local) |
+                    Q(idequipolocal=equipo_visitante) | Q(idequipovisitante=equipo_visitante)
+                )
             )
             if self.instance:
                 conflicting_partidos = conflicting_partidos.exclude(idpartido=self.instance.idpartido)
