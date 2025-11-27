@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from django.db.models import Q
 from torneo.models import Partido
 
 class PartidoSerializer(serializers.ModelSerializer):
@@ -54,15 +55,16 @@ class PartidoSerializer(serializers.ModelSerializer):
         if torneo and fecha_partido:
             if not (torneo.fechainiciotorneo <= fecha_partido <= torneo.fechafintorneo):
                 raise serializers.ValidationError("La fecha del partido debe estar dentro del rango del torneo.")
-            partidos = Partido.objects.filter(
-                fechapartido=fecha_partido,
+            conflicting_partidos = Partido.objects.filter(
+                Q(fechapartido=fecha_partido) & (
+                    Q(idequipolocal=equipo_local) | Q(idequipovisitante=equipo_local) |
+                    Q(idequipolocal=equipo_visitante) | Q(idequipovisitante=equipo_visitante)
+                )
             )
             if self.instance:
-                partidos = partidos.exclude(idpartido=self.instance.idpartido)
-            for partido in partidos:
-                if (partido.idequipolocal == equipo_local or partido.idequipovisitante == equipo_local or
-                    partido.idequipolocal == equipo_visitante or partido.idequipovisitante == equipo_visitante):
-                    raise serializers.ValidationError("Un equipo no puede tener más de un partido en la misma fecha.")
+                conflicting_partidos = conflicting_partidos.exclude(idpartido=self.instance.idpartido)
+            if conflicting_partidos.exists():
+                raise serializers.ValidationError("Un equipo no puede tener más de un partido en la misma fecha.")
 
         if not equipo_local and not equipo_visitante:
             raise serializers.ValidationError("Debe especificar al menos un equipo (local o visitante).")
