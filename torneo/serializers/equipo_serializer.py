@@ -1,5 +1,4 @@
 import base64
-from email.mime import image
 from rest_framework import serializers
 from torneo.models import Equipo
 
