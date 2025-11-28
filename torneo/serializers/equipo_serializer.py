@@ -1,4 +1,5 @@
 import base64
+from email.mime import image
 from rest_framework import serializers
 from torneo.models import Equipo
 
@@ -35,6 +36,9 @@ class EquipoSerializer(serializers.ModelSerializer):
         """
         internal = super().to_internal_value(data)
         imagen = data.get('imagenequipo')
+
+        if not imagen:
+            return internal
 
         # Si viene como base64, la convertimos a bytes
         if isinstance(imagen, str) and imagen.startswith("data:image"):
