@@ -1,4 +1,5 @@
 
+from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
 from rest_framework import status
 from rest_framework.serializers import ValidationError
@@ -20,18 +21,22 @@ class TorneoListCreateView(APIView):
         Returns:
         - response (dict): Contiene el mensaje de exito y el torneo creado.
         """
-        serializer = TorneoSerializer(data=request.data)
-        if not serializer.is_valid():
-            errors = format_serializer_errors(serializer.errors)
-            raise ValidationError(errors)
-        
-        torneo = serializer.save()
-        return success_response(
-            message="Torneo creado correctamente",
-            data=TorneoSerializer(torneo).data,
-            status=status.HTTP_201_CREATED
-        )
-        
+        try:
+            serializer = TorneoSerializer(data=request.data)
+            if not serializer.is_valid():
+                errors = format_serializer_errors(serializer.errors)
+                raise ValidationError(errors)
+            
+            torneo = serializer.save()
+            return success_response(
+                message="Torneo creado correctamente",
+                data=TorneoSerializer(torneo).data,
+                status=status.HTTP_201_CREATED
+            )
+        except ValidationError as ve:
+            return error_response(message=str(ve), data=ve.detail, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return error_response(message=str(e), data=None, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class TorneoDetailView(APIView):
@@ -58,11 +63,13 @@ class TorneoDetailView(APIView):
         Returns:
         - response (dict): Contiene el mensaje de exito y el torneo obtenido.
         """
-        torneo = self.get_object(pk)
-        if not torneo:
-            return error_response(message="Torneo no encontrado", data=None, status=status.HTTP_404_NOT_FOUND)
-        return success_response(message="Torneo encontrado", data=TorneoSerializer(torneo).data, status=status.HTTP_200_OK)
-
+        try:
+            torneo = self.get_object(pk)
+            if not torneo:
+                raise Exception("Torneo no encontrado")
+            return success_response(message="Torneo encontrado", data=TorneoSerializer(torneo).data, status=status.HTTP_200_OK)
+        except Exception as e:
+            return error_response(message=str(e), data=None, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class TorneoAllView(APIView):
     def get(self, request):
@@ -72,12 +79,14 @@ class TorneoAllView(APIView):
         Returns:
         - response (dict): Contiene el mensaje de exito y los torneos encontrados.
         """
-        torneos = Torneo.objects.all().order_by("idtorneo")
-        paginated_data = paginate_queryset(torneos, TorneoSerializer, request)
-        if "error" in paginated_data:
-            return error_response(message=paginated_data["error"], data=None, status=status.HTTP_400_BAD_REQUEST)
-        return success_response(message="Torneos encontrados", data=paginated_data, status=status.HTTP_200_OK)
-
+        try:
+            torneos = Torneo.objects.all().order_by("idtorneo")
+            paginated_data = paginate_queryset(torneos, TorneoSerializer, request)
+            if "error" in paginated_data:
+                raise Exception(paginated_data["error"])
+            return paginated_data
+        except Exception as e:
+            return error_response(message=str(e), data=None, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class TorneoUpdateView(APIView):
     def patch(self, request, pk):
@@ -94,7 +103,7 @@ class TorneoUpdateView(APIView):
         try:
             torneo = Torneo.objects.filter(pk=pk).first()
             if not torneo:
-                return error_response(message="Torneo no encontrado", data=None, status=status.HTTP_404_NOT_FOUND)
+                raise Exception("Torneo no encontrado")
 
             serializer = TorneoSerializer(torneo, data=request.data, partial=True)
             
@@ -120,19 +129,27 @@ class TorneoDeleteView(APIView):
         Returns:
         - response (dict): Contiene el mensaje de exito y el torneo eliminado.
         """
-    
-        torneo = Torneo.objects.filter(pk=pk).first()
-        if not torneo:
-            return error_response(message="Torneo no encontrado", data=None, status=status.HTTP_404_NOT_FOUND)
-        
-        partidos = Partido.objects.filter(idtorneo=torneo).exists()
+        try:
+            torneo = get_object_or_404(Torneo, pk=pk)
 
-        if partidos:
-            return error_response(
-                message="No se puede eliminar el torneo porque tiene partidos asociados.",
-                status=status.HTTP_400_BAD_REQUEST,
-                data=None
-            )
+            if not torneo:
+                raise Exception("Torneo no encontrado")
+            
+            if not torneo.torneoactivo:
+                raise Exception("El torneo ya está inactivo")
+            
+            # partidos = Partido.objects.filter(idtorneo=torneo).exists()
 
-        torneo.delete()
-        return success_response(message="Torneo eliminado correctamente", data=None, status=status.HTTP_200_OK)
+            # if partidos:
+            #     return error_response(
+            #         message="No se puede eliminar el torneo porque tiene partidos asociados.",
+            #         status=status.HTTP_400_BAD_REQUEST,
+            #         data=None
+            #     )
+
+            torneo.torneoactivo = False
+            torneo.save(update_fields=['torneoactivo'])
+
+            return success_response(message="Torneo deshabilitado correctamente", data=None, status=status.HTTP_200_OK)
+        except Exception as e:
+            return error_response(message=str(e), data=None, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

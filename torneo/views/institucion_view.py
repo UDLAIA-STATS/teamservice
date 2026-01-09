@@ -1,3 +1,4 @@
+from django.shortcuts import get_object_or_404
 from torneo.models import Institucion
 from torneo.serializers import InstitucionSerializer
 from rest_framework.views import APIView
@@ -20,11 +21,11 @@ class InstitucionListCreateView(APIView):
         Returns:
         - response (dict): Contiene el mensaje de éxito y la institución creada.
         """
-        serializer = InstitucionSerializer(data=request.data)
-        if not serializer.is_valid():
-            raise ValidationError(format_serializer_errors(serializer.errors))
-
         try:
+            serializer = InstitucionSerializer(data=request.data)
+            if not serializer.is_valid():
+                raise ValidationError(format_serializer_errors(serializer.errors))
+
             institucion = serializer.save()
             return success_response(
                 message="Institución creada correctamente",
@@ -37,6 +38,10 @@ class InstitucionListCreateView(APIView):
                 data=None,
                 status=status.HTTP_400_BAD_REQUEST
             )
+        except ValidationError as ve:
+            return error_response(message=str(ve), data=ve.detail, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return error_response(message=str(e), data=None, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class InstitucionDetailView(APIView):
@@ -51,11 +56,13 @@ class InstitucionDetailView(APIView):
         Returns:
         - response (dict): Contiene el mensaje de éxito y la institución obtenida.
         """
-        institucion = Institucion.objects.filter(pk=pk).first()
-        if not institucion:
-            return error_response(message="Institución no encontrada", data=None, status=status.HTTP_404_NOT_FOUND)
-        return success_response(message="Institución encontrada", data=InstitucionSerializer(institucion).data, status=status.HTTP_200_OK)
-
+        try:
+            institucion = Institucion.objects.filter(pk=pk).first()
+            if not institucion:
+                raise Exception("Institución no encontrada")
+            return success_response(message="Institución encontrada", data=InstitucionSerializer(institucion).data, status=status.HTTP_200_OK)
+        except Exception as e:
+            return error_response(message=str(e), data=None, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class InstitucionAllView(APIView):
     def get(self, request):
@@ -65,12 +72,14 @@ class InstitucionAllView(APIView):
         Returns:
         - response (dict): Contiene el mensaje de éxito y las instituciones encontradas.
         """
-        instituciones = Institucion.objects.all().order_by("idinstitucion")
-        paginated_data = paginate_queryset(instituciones, InstitucionSerializer, request)
-        if "error" in paginated_data:
-            return error_response(message=paginated_data["error"], data=None, status=status.HTTP_400_BAD_REQUEST)
-        return success_response(message="Instituciones encontradas", data=paginated_data, status=status.HTTP_200_OK)
-
+        try:
+            instituciones = Institucion.objects.all().order_by("idinstitucion")
+            paginated_data = paginate_queryset(instituciones, InstitucionSerializer, request)
+            if "error" in paginated_data:
+                raise Exception(paginated_data["error"])
+            return paginated_data
+        except Exception as e:
+            return error_response(message=str(e), data=None, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class InstitucionUpdateView(APIView):
     def patch(self, request, pk):
@@ -84,17 +93,22 @@ class InstitucionUpdateView(APIView):
         Returns:
         - response (dict): Contiene el mensaje de éxito y la institución actualizada.
         """
-        institucion = Institucion.objects.filter(pk=pk).first()
-        if not institucion:
-            return error_response(message="Institución no encontrada", data=None, status=status.HTTP_404_NOT_FOUND)
+        try:
+            institucion = Institucion.objects.filter(pk=pk).first()
+            if not institucion:
+                raise Exception("Institución no encontrada")
 
-        serializer = InstitucionSerializer(institucion, data=request.data, partial=True)
-        
-        if not serializer.is_valid():
-            raise ValidationError(format_serializer_errors(serializer.errors))
+            serializer = InstitucionSerializer(institucion, data=request.data, partial=True)
+            
+            if not serializer.is_valid():
+                raise ValidationError(format_serializer_errors(serializer.errors))
 
-        serializer.save()
-        return success_response(message="Institución actualizada correctamente", data=serializer.data, status=status.HTTP_200_OK)
+            serializer.save()
+            return success_response(message="Institución actualizada correctamente", data=serializer.data, status=status.HTTP_200_OK)
+        except ValidationError as ve:
+            return error_response(message=str(ve), data=None, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return error_response(message=str(e), data=None, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class InstitucionDeleteView(APIView):
     def delete(self, request, pk):
@@ -108,9 +122,16 @@ class InstitucionDeleteView(APIView):
         Returns:
         - response (dict): Contiene el mensaje de éxito y la institución eliminada.
         """
-        institucion = Institucion.objects.filter(pk=pk).first()
-        if not institucion:
-            return error_response(message="Institución no encontrada", data=None, status=status.HTTP_404_NOT_FOUND)
+        try:
+            institucion = get_object_or_404(Institucion, pk=pk)
 
-        institucion.delete()
-        return success_response(message="Institución eliminada correctamente", data=None, status=status.HTTP_200_OK)
+            if not institucion.institucionactiva:
+                raise Exception("La institución ya está inactiva")
+            
+            institucion.institucionactiva = False
+            institucion.save(update_fields=['institucionactiva'])
+            return success_response(message="Institución deshabilitada correctamente", data=None, status=status.HTTP_200_OK)
+        except ValidationError as ve:
+            return error_response(message=str(ve), data=None, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return error_response(message=str(e), data=None, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
