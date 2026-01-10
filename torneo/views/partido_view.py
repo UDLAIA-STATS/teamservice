@@ -24,7 +24,11 @@ class PartidoListCreateView(APIView):
             serializer = PartidoSerializer(data=request.data)
             
             if not serializer.is_valid():
-                raise ValidationError(format_serializer_errors(serializer.errors))
+                return error_response(
+                    message="Errores de validación",
+                    data=format_serializer_errors(serializer.errors),
+                    status=status.HTTP_400_BAD_REQUEST
+                )
 
             partido = serializer.save()
             return success_response(
@@ -32,8 +36,8 @@ class PartidoListCreateView(APIView):
                 status=status.HTTP_201_CREATED,
                 data=PartidoSerializer(partido).data
             )
-        except ValidationError as ve:
-            return error_response(message=str(ve), data=ve.detail, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return error_response(message=str(e), data=None, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class PartidoDetailView(APIView):
     def get_object(self, pk):
@@ -52,7 +56,7 @@ class PartidoDetailView(APIView):
         try:
             partido = self.get_object(pk)
             if not partido:
-                raise Exception("Partido no encontrado")
+                return error_response(message="Partido no encontrado", data=None, status=status.HTTP_404_NOT_FOUND)
             return success_response(message="Partido encontrado", data=PartidoSerializer(partido).data, status=status.HTTP_200_OK)
         except Exception as e:
             return error_response(message=str(e), data=None, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -68,8 +72,6 @@ class PartidoAllView(APIView):
         try:
             partidos = Partido.objects.all().order_by("idpartido")
             paginated_data = paginate_queryset(partidos, PartidoSerializer, request)
-            if "error" in paginated_data:
-                raise Exception(paginated_data["error"])
             return paginated_data
         except Exception as e:
             return error_response(message=str(e), data=None, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -90,16 +92,17 @@ class PartidoUpdateView(APIView):
         try:
             partido = Partido.objects.filter(pk=pk).first()
             if not partido:
-                raise Exception("Partido no encontrado")
+                return error_response(message="Partido no encontrado", data=None, status=status.HTTP_404_NOT_FOUND)
 
             serializer = PartidoSerializer(partido, data=request.data, partial=True)
             if not serializer.is_valid():
-                raise ValidationError(format_serializer_errors(serializer.errors))
-
+                return error_response(
+                    message="Errores de validación",
+                    data=format_serializer_errors(serializer.errors),
+                    status=status.HTTP_400_BAD_REQUEST
+                )
             serializer.save()
             return success_response(message="Partido actualizado correctamente", data=serializer.data, status=status.HTTP_200_OK)
-        except ValidationError as ve:
-            return error_response(message=str(ve), data=None, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             return error_response(message=str(e), data=None, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -119,10 +122,10 @@ class PartidoDeleteView(APIView):
             partido = get_object_or_404(Partido, pk=pk)
 
             if not partido:
-                raise Exception("Partido no encontrado")
+                return error_response(message="Partido no encontrado", data=None, status=status.HTTP_404_NOT_FOUND)
 
             if partido.partidosubido:
-                raise Exception("No se puede eliminar el partido porque ya ha sido analizado.")
+                return error_response(message="No se puede eliminar el partido porque ya ha sido analizado.", data=None, status=status.HTTP_400_BAD_REQUEST)
 
             return success_response(message="Partido eliminado correctamente", data=None, status=status.HTTP_200_OK)
         except Exception as e:

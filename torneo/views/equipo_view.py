@@ -24,8 +24,11 @@ class EquipoListCreateView(APIView):
         try:
             serializer = EquipoSerializer(data=request.data, context={'request': request})
             if not serializer.is_valid():
-                errors = format_serializer_errors(serializer.errors)
-                raise ValidationError(errors)
+                return error_response(
+                    message="Errores de validación",
+                    data=format_serializer_errors(serializer.errors),
+                    status=status.HTTP_400_BAD_REQUEST
+                )
             
             equipo = serializer.save()
             return success_response(
@@ -33,8 +36,6 @@ class EquipoListCreateView(APIView):
                 status=status.HTTP_201_CREATED,
                 data=EquipoSerializer(equipo, context={'request': request}).data
             )
-        except ValidationError as ve:
-            return error_response(message=str(ve), data=ve.detail, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             return error_response(message=str(e), data=None, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -55,7 +56,7 @@ class EquipoDetailView(APIView):
         try:
             equipo = self.get_object(pk)
             if not equipo:
-                raise Exception("Equipo no encontrado")
+                return error_response(message="Equipo no encontrado", data=None, status=status.HTTP_404_NOT_FOUND)
             return success_response(message="Equipo encontrado", data=EquipoSerializer(equipo).data, status=status.HTTP_200_OK)
         except Exception as e:
             return error_response(message=str(e), data=None, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -76,7 +77,7 @@ class EquipoSearchByNameView(APIView):
         try:
             equipo = Equipo.objects.filter(nombreequipo=name).first()
             if not equipo:
-                raise Exception("Equipo no encontrado")
+                return error_response(message="Equipo no encontrado", data=None, status=status.HTTP_404_NOT_FOUND)
             return success_response(message="Equipo encontrado", data=EquipoSerializer(equipo).data, status=status.HTTP_200_OK)
         except Exception as e:
             return error_response(message=str(e), data=None, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -93,8 +94,6 @@ class EquipoAllView(APIView):
         try:
             equipos = Equipo.objects.all().order_by("idequipo")
             paginated_data = paginate_queryset(equipos, EquipoSerializer, request)
-            if "error" in paginated_data:
-                raise Exception(paginated_data["error"])
             return paginated_data
         except Exception as e:
             return error_response(message=str(e), data=None, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -115,17 +114,19 @@ class EquipoUpdateView(APIView):
         try:
             equipo = Equipo.objects.filter(pk=pk).first()
             if not equipo:
-                raise Exception("Equipo no encontrado")
+                return error_response(message="Equipo no encontrado", data=None, status=status.HTTP_404_NOT_FOUND)
 
             serializer = EquipoSerializer(equipo, data=request.data, partial=True, context={'request': request})
             
             if not serializer.is_valid():
-                raise ValidationError(format_serializer_errors(serializer.errors))
+                return error_response(
+                    message="Errores de validación",
+                    data=format_serializer_errors(serializer.errors),
+                    status=status.HTTP_400_BAD_REQUEST
+                )
             
             serializer.save()
             return success_response(message="Equipo actualizado correctamente", data=serializer.data, status=status.HTTP_200_OK)
-        except ValidationError as ve:
-            return error_response(message=str(ve), data=None, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             return error_response(message=str(e), data=None, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -146,7 +147,7 @@ class EquipoDeleteView(APIView):
             equipo = get_object_or_404(Equipo, pk=pk)
 
             if not equipo.equipoactivo:
-                raise Exception("El equipo ya está inactivo")
+                return error_response(message="El equipo ya está inactivo.", data=None, status=status.HTTP_400_BAD_REQUEST)
 
             # if Partido.objects.filter(idequipolocal=equipo).exists() or Partido.objects.filter(idequipovisitante=equipo).exists():
             #     raise Exception("No se puede eliminar el equipo porque está relacionado con uno o más partidos.")
@@ -154,7 +155,5 @@ class EquipoDeleteView(APIView):
             equipo.equipoactivo = False
             equipo.save(update_fields=['equipoactivo'])
             return success_response(message="Equipo deshabilitado correctamente", data=None, status=status.HTTP_200_OK)
-        except ValidationError as ve:
-            return error_response(message=str(ve), data=None, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             return error_response(message=str(e), data=None, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

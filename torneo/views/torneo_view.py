@@ -2,7 +2,6 @@
 from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
 from rest_framework import status
-from rest_framework.serializers import ValidationError
 
 from torneo.models import Partido, Torneo
 from torneo.serializers import TorneoSerializer
@@ -24,8 +23,11 @@ class TorneoListCreateView(APIView):
         try:
             serializer = TorneoSerializer(data=request.data)
             if not serializer.is_valid():
-                errors = format_serializer_errors(serializer.errors)
-                raise ValidationError(errors)
+                return error_response(
+                    message="Errores de validación",
+                    data=format_serializer_errors(serializer.errors),
+                    status=status.HTTP_400_BAD_REQUEST
+                )
             
             torneo = serializer.save()
             return success_response(
@@ -33,8 +35,6 @@ class TorneoListCreateView(APIView):
                 data=TorneoSerializer(torneo).data,
                 status=status.HTTP_201_CREATED
             )
-        except ValidationError as ve:
-            return error_response(message=str(ve), data=ve.detail, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             return error_response(message=str(e), data=None, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -82,8 +82,6 @@ class TorneoAllView(APIView):
         try:
             torneos = Torneo.objects.all().order_by("idtorneo")
             paginated_data = paginate_queryset(torneos, TorneoSerializer, request)
-            if "error" in paginated_data:
-                raise Exception(paginated_data["error"])
             return paginated_data
         except Exception as e:
             return error_response(message=str(e), data=None, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -108,14 +106,16 @@ class TorneoUpdateView(APIView):
             serializer = TorneoSerializer(torneo, data=request.data, partial=True)
             
             if not serializer.is_valid():
-                raise ValidationError(format_serializer_errors(serializer.errors))
+                return error_response(
+                    message="Errores de validación",
+                    data=format_serializer_errors(serializer.errors),
+                    status=status.HTTP_400_BAD_REQUEST
+                )
 
             serializer.save()
             return success_response(message="Torneo actualizado correctamente", data=serializer.data, status=status.HTTP_200_OK)
-        except ValidationError as ve:
-            return error_response(message=str(ve), data=None, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
-            return error_response(message=str(e), data=None, status=status.HTTP_400_BAD_REQUEST)
+            return error_response(message=str(e), data=None, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class TorneoDeleteView(APIView):
     def delete(self, request, pk):

@@ -24,7 +24,11 @@ class InstitucionListCreateView(APIView):
         try:
             serializer = InstitucionSerializer(data=request.data)
             if not serializer.is_valid():
-                raise ValidationError(format_serializer_errors(serializer.errors))
+                return error_response(
+                    message="Errores de validación",
+                    data=format_serializer_errors(serializer.errors),
+                    status=status.HTTP_400_BAD_REQUEST
+                )
 
             institucion = serializer.save()
             return success_response(
@@ -59,7 +63,7 @@ class InstitucionDetailView(APIView):
         try:
             institucion = Institucion.objects.filter(pk=pk).first()
             if not institucion:
-                raise Exception("Institución no encontrada")
+                return error_response(message="Institución no encontrada", data=None, status=status.HTTP_404_NOT_FOUND)
             return success_response(message="Institución encontrada", data=InstitucionSerializer(institucion).data, status=status.HTTP_200_OK)
         except Exception as e:
             return error_response(message=str(e), data=None, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -75,8 +79,6 @@ class InstitucionAllView(APIView):
         try:
             instituciones = Institucion.objects.all().order_by("idinstitucion")
             paginated_data = paginate_queryset(instituciones, InstitucionSerializer, request)
-            if "error" in paginated_data:
-                raise Exception(paginated_data["error"])
             return paginated_data
         except Exception as e:
             return error_response(message=str(e), data=None, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -96,12 +98,16 @@ class InstitucionUpdateView(APIView):
         try:
             institucion = Institucion.objects.filter(pk=pk).first()
             if not institucion:
-                raise Exception("Institución no encontrada")
+                return error_response(message="Institución no encontrada", data=None, status=status.HTTP_404_NOT_FOUND)
 
             serializer = InstitucionSerializer(institucion, data=request.data, partial=True)
             
             if not serializer.is_valid():
-                raise ValidationError(format_serializer_errors(serializer.errors))
+                return error_response(
+                    message="Errores de validación",
+                    data=format_serializer_errors(serializer.errors),
+                    status=status.HTTP_400_BAD_REQUEST
+                )
 
             serializer.save()
             return success_response(message="Institución actualizada correctamente", data=serializer.data, status=status.HTTP_200_OK)
@@ -126,7 +132,7 @@ class InstitucionDeleteView(APIView):
             institucion = get_object_or_404(Institucion, pk=pk)
 
             if not institucion.institucionactiva:
-                raise Exception("La institución ya está inactiva")
+                return error_response(message="La institución ya está inactiva.", data=None, status=status.HTTP_400_BAD_REQUEST)
             
             institucion.institucionactiva = False
             institucion.save(update_fields=['institucionactiva'])

@@ -4,7 +4,6 @@ from torneo.models import Equipo
 
 class EquipoSerializer(serializers.ModelSerializer):
     institucion_nombre = serializers.StringRelatedField(source='idinstitucion', read_only=True)
-    imagenequipo = serializers.CharField(required=False, allow_null=True)
     
     class Meta:
         model = Equipo
