@@ -1,3 +1,4 @@
+from django.http import Http404
 from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
 from rest_framework import status
@@ -93,6 +94,7 @@ class EquipoAllView(APIView):
         """
         try:
             equipos = Equipo.objects.all().order_by("idequipo")
+
             paginated_data = paginate_queryset(equipos, EquipoSerializer, request)
             return paginated_data
         except Exception as e:
@@ -155,5 +157,7 @@ class EquipoDeleteView(APIView):
             equipo.equipoactivo = False
             equipo.save(update_fields=['equipoactivo'])
             return success_response(message="Equipo deshabilitado correctamente", data=None, status=status.HTTP_200_OK)
+        except Http404 as er:
+            return error_response(message="Equipo no encontrado", data=None, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             return error_response(message=str(e), data=None, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

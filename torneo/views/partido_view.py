@@ -1,3 +1,4 @@
+from django.http import Http404
 from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
 from rest_framework import status
@@ -128,5 +129,7 @@ class PartidoDeleteView(APIView):
                 return error_response(message="No se puede eliminar el partido porque ya ha sido analizado.", data=None, status=status.HTTP_400_BAD_REQUEST)
 
             return success_response(message="Partido eliminado correctamente", data=None, status=status.HTTP_200_OK)
+        except Http404 as er:
+            return error_response(message="Partido no encontrado", data=None, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             return error_response(message=str(e), data=None, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

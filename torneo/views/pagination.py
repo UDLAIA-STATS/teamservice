@@ -9,6 +9,9 @@ def paginate_queryset(queryset, serializer_class, request):
     try:
         page = int(request.query_params.get("page", 1))
         offset = int(request.query_params.get("offset", 10))
+
+        if page < 1 or offset < 1:
+            return error_response(message="Paginación inválida", data=None, status=status.HTTP_400_BAD_REQUEST)
     except ValueError:
         return error_response(message="Paginación inválida", data=None, status=status.HTTP_400_BAD_REQUEST)
 

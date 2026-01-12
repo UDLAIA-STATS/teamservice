@@ -1,3 +1,4 @@
+from django.http import Http404
 from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
 from rest_framework import status
@@ -39,18 +40,6 @@ class TemporadaListCreateView(APIView):
             return error_response(message=str(e), data=None, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class TemporadaDetailView(APIView):
-    def get_object(self, pk):
-        """
-        Devuelve el objeto Temporada asociado con el pk.
-        
-        Parameters:
-        - pk (int): Pk de la temporada a buscar.
-        
-        Returns:
-        - temporada (Temporada): Temporada asociado con el pk.
-        """
-        return Temporada.objects.filter(pk=pk).first()
-
     def get(self, request, pk):
         """
         Obtiene una temporada por su pk.
@@ -63,10 +52,10 @@ class TemporadaDetailView(APIView):
         - response (dict): Contiene el mensaje de exito y la temporada obtenida.
         """
         try:
-            temporada = self.get_object(pk)
-            if not temporada:
-                raise Exception("Temporada no encontrada")
+            temporada = get_object_or_404(Temporada, pk=pk)
             return success_response(message="Temporada encontrada", data=TemporadaSerializer(temporada).data, status=status.HTTP_200_OK)
+        except Http404 as er:
+            return error_response(message="Temporada no encontrada", data=None, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             return error_response(message=str(e), data=None, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -100,10 +89,7 @@ class TemporadaUpdateView(APIView):
         - response (dict): Contiene el mensaje de exito y la temporada actualizada.
         """
         try:
-            temporada = Temporada.objects.filter(pk=pk).first()
-            if not temporada:
-                return error_response(message="Temporada no encontrada", data=None, status=status.HTTP_404_NOT_FOUND)
-
+            temporada = get_object_or_404(Temporada, pk=pk)
             serializer = TemporadaSerializer(temporada, data=request.data, partial=True)
             
             if not serializer.is_valid():
@@ -115,6 +101,8 @@ class TemporadaUpdateView(APIView):
             
             serializer.save()
             return success_response(message="Temporada actualizada correctamente", data=serializer.data, status=status.HTTP_200_OK)
+        except Http404 as er:
+            return error_response(message="Temporada no encontrada", data=None, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             return error_response(message=str(e), data=None, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -149,5 +137,7 @@ class TemporadaDeleteView(APIView):
             temporada.save(update_fields=['temporadaactiva'])
 
             return success_response(message="Temporada deshabilitada correctamente", data=None, status=status.HTTP_200_OK)
+        except Http404 as er:
+            return error_response(message="Temporada no encontrada", data=None, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             return error_response(message=str(e), data=None, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

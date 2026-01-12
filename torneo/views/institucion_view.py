@@ -1,3 +1,4 @@
+from django.http import Http404
 from django.shortcuts import get_object_or_404
 from torneo.models import Institucion
 from torneo.serializers import InstitucionSerializer
@@ -137,6 +138,8 @@ class InstitucionDeleteView(APIView):
             institucion.institucionactiva = False
             institucion.save(update_fields=['institucionactiva'])
             return success_response(message="Institución deshabilitada correctamente", data=None, status=status.HTTP_200_OK)
+        except Http404 as er:
+            return error_response(message="Institución no encontrada", data=None, status=status.HTTP_404_NOT_FOUND)
         except ValidationError as ve:
             return error_response(message=str(ve), data=None, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
