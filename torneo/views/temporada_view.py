@@ -1,7 +1,8 @@
+from django.http import Http404
+from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
 from rest_framework import status
 from rest_framework.serializers import ValidationError
-
 from torneo.models import Partido, Temporada, Torneo
 from torneo.serializers import TemporadaSerializer
 from torneo.utils.format_serializer import format_serializer_errors
@@ -19,32 +20,26 @@ class TemporadaListCreateView(APIView):
         Returns:
         - response (dict): Contiene el mensaje de exito y la temporada creada.
         """
-        serializer = TemporadaSerializer(data=request.data)
-        
-        if not serializer.is_valid():
-            raise ValidationError(format_serializer_errors(serializer.errors))
+        try:
+            serializer = TemporadaSerializer(data=request.data)
+            
+            if not serializer.is_valid():
+                return error_response(
+                    message="Errores de validación",
+                    data=format_serializer_errors(serializer.errors),
+                    status=status.HTTP_400_BAD_REQUEST
+                )
 
-        temporada = serializer.save()
-        return success_response(
-            message="Temporada creada correctamente",
-            data=TemporadaSerializer(temporada).data,
-            status=status.HTTP_201_CREATED
-        )
-
+            temporada = serializer.save()
+            return success_response(
+                message="Temporada creada correctamente",
+                data=TemporadaSerializer(temporada).data,
+                status=status.HTTP_201_CREATED
+            )
+        except Exception as e:
+            return error_response(message=str(e), data=None, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class TemporadaDetailView(APIView):
-    def get_object(self, pk):
-        """
-        Devuelve el objeto Temporada asociado con el pk.
-        
-        Parameters:
-        - pk (int): Pk de la temporada a buscar.
-        
-        Returns:
-        - temporada (Temporada): Temporada asociado con el pk.
-        """
-        return Temporada.objects.filter(pk=pk).first()
-
     def get(self, request, pk):
         """
         Obtiene una temporada por su pk.
@@ -56,12 +51,13 @@ class TemporadaDetailView(APIView):
         Returns:
         - response (dict): Contiene el mensaje de exito y la temporada obtenida.
         """
-
-        temporada = self.get_object(pk)
-        if not temporada:
+        try:
+            temporada = get_object_or_404(Temporada, pk=pk)
+            return success_response(message="Temporada encontrada", data=TemporadaSerializer(temporada).data, status=status.HTTP_200_OK)
+        except Http404 as er:
             return error_response(message="Temporada no encontrada", data=None, status=status.HTTP_404_NOT_FOUND)
-        return success_response(message="Temporada encontrada", data=TemporadaSerializer(temporada).data, status=status.HTTP_200_OK)
-
+        except Exception as e:
+            return error_response(message=str(e), data=None, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class TemporadaAllView(APIView):
     def get(self, request):
@@ -71,12 +67,14 @@ class TemporadaAllView(APIView):
         Returns:
         - response (dict): Contiene el mensaje de exito y las temporadas encontradas.
         """
-        temporadas = Temporada.objects.all().order_by("idtemporada")
-        paginated_data = paginate_queryset(temporadas, TemporadaSerializer, request)
-        if "error" in paginated_data:
-            return error_response(message=paginated_data["error"], data=None, status=status.HTTP_400_BAD_REQUEST)
-        return success_response(message="Temporadas encontradas", data=paginated_data, status=status.HTTP_200_OK)
-
+        try:
+            temporadas = Temporada.objects.all().order_by("idtemporada")
+            paginated_data = paginate_queryset(temporadas, TemporadaSerializer, request)
+            if "error" in paginated_data:
+                raise Exception(paginated_data["error"])
+            return paginated_data
+        except Exception as e:
+            return error_response(message=str(e), data=None, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class TemporadaUpdateView(APIView):
     def patch(self, request, pk):
@@ -90,17 +88,23 @@ class TemporadaUpdateView(APIView):
         Returns:
         - response (dict): Contiene el mensaje de exito y la temporada actualizada.
         """
-        temporada = Temporada.objects.filter(pk=pk).first()
-        if not temporada:
-            return Response({"error": "Temporada no encontrada"}, status=status.HTTP_404_NOT_FOUND)
-
-        serializer = TemporadaSerializer(temporada, data=request.data, partial=True)
-        
-        if not serializer.is_valid():
-            raise ValidationError(format_serializer_errors(serializer.errors))
-        
-        serializer.save()
-        return success_response(message="Temporada actualizada correctamente", data=serializer.data, status=status.HTTP_200_OK)
+        try:
+            temporada = get_object_or_404(Temporada, pk=pk)
+            serializer = TemporadaSerializer(temporada, data=request.data, partial=True)
+            
+            if not serializer.is_valid():
+                return error_response(
+                    message="Errores de validación",
+                    data=format_serializer_errors(serializer.errors),
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            serializer.save()
+            return success_response(message="Temporada actualizada correctamente", data=serializer.data, status=status.HTTP_200_OK)
+        except Http404 as er:
+            return error_response(message="Temporada no encontrada", data=None, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return error_response(message=str(e), data=None, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class TemporadaDeleteView(APIView):
     def delete(self, request, pk):
@@ -114,15 +118,26 @@ class TemporadaDeleteView(APIView):
         Returns:
         - response (dict): Contiene el mensaje de exito y la temporada eliminada.
         """
-        temporada = Temporada.objects.filter(pk=pk).first()
-        if not temporada:
-            return error_response(message="Temporada no encontrada", data=None, status=status.HTTP_404_NOT_FOUND)
-        if Torneo.objects.filter(idtemporada=temporada).exists() or Partido.objects.filter(idtemporada=temporada).exists():
-            return error_response(
-                message="No se puede eliminar la temporada porque tiene torneos o partidos asociados.",
-                data=None,
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        try:
+            temporada = get_object_or_404(Temporada, pk=pk)
+            if not temporada:
+                return error_response(message="Temporada no encontrada", data=None, status=status.HTTP_404_NOT_FOUND)
+            
+            if not temporada.temporadaactiva:
+                return error_response(message="La temporada ya está inactiva.", data=None, status=status.HTTP_400_BAD_REQUEST)
 
-        temporada.delete()
-        return success_response(message="Temporada eliminada correctamente", data=None, status=status.HTTP_200_OK)
+            # if Torneo.objects.filter(idtemporada=temporada).exists() or Partido.objects.filter(idtemporada=temporada).exists():
+            #     return error_response(
+            #         message="No se puede eliminar la temporada porque tiene torneos o partidos asociados.",
+            #         data=None,
+            #         status=status.HTTP_400_BAD_REQUEST
+            #     )
+            
+            temporada.temporadaactiva = False
+            temporada.save(update_fields=['temporadaactiva'])
+
+            return success_response(message="Temporada deshabilitada correctamente", data=None, status=status.HTTP_200_OK)
+        except Http404 as er:
+            return error_response(message="Temporada no encontrada", data=None, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return error_response(message=str(e), data=None, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

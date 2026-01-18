@@ -14,7 +14,7 @@ from pathlib import Path
 from decouple import config
 from django.core.management.commands.runserver import Command as rs
 
-rs.default_port = config('API_PORT', default=8020, cast=int)
+rs.default_port = 8020
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 MEDIA_URL = '/media/'
@@ -24,7 +24,7 @@ MEDIA_ROOT = BASE_DIR / 'media'
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = f"django-insecure-=u5wm^%2&e!81rm#l@)5tex(6q-t^pa#c@&#&3rp9oz4^hr^%u"
+SECRET_KEY = 'django-insecure-=u5wm^%2&e!81rm#l@)5tex(6q-t^pa#c@&#&3rp9oz4^hr^%u'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', default=False, cast=bool)

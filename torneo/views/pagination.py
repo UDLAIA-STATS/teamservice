@@ -1,4 +1,7 @@
 from math import ceil
+from rest_framework import status
+
+from torneo.utils.responses import error_response, pagination_response
 
 
 def paginate_queryset(queryset, serializer_class, request):
@@ -6,8 +9,11 @@ def paginate_queryset(queryset, serializer_class, request):
     try:
         page = int(request.query_params.get("page", 1))
         offset = int(request.query_params.get("offset", 10))
+
+        if page < 1 or offset < 1:
+            return error_response(message="Paginación inválida", data=None, status=status.HTTP_400_BAD_REQUEST)
     except ValueError:
-        return {"error": "Los parámetros 'page' y 'offset' deben ser números enteros."}
+        return error_response(message="Paginación inválida", data=None, status=status.HTTP_400_BAD_REQUEST)
 
     total = queryset.count()
     start = (page - 1) * offset
@@ -15,10 +21,11 @@ def paginate_queryset(queryset, serializer_class, request):
     paginated = queryset[start:end]
 
     serializer = serializer_class(paginated, many=True)
-    return {
-        "count": total,
-        "page": page,
-        "offset": offset,
-        "pages": ceil(total / offset) if offset else 1,
-        "results": serializer.data,
-    }
+    return pagination_response(
+        data=serializer.data,
+        page=page,
+        offset=offset,
+        pages=ceil(total / offset) if offset > 0 else 1,
+        total_items=total,
+        status=status.HTTP_200_OK
+    )
