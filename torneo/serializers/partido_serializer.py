@@ -72,3 +72,13 @@ class PartidoSerializer(serializers.ModelSerializer):
 
 
         return attrs
+    
+    def validate_marcadorequipolocal(self, value):
+        if value is not None and value < 0:
+            raise serializers.ValidationError("El marcador del equipo local no puede ser negativo.")
+        return value
+
+    def validate_marcadorequipovisitante(self, value):
+        if value is not None and value < 0:
+            raise serializers.ValidationError("El marcador del equipo visitante no puede ser negativo.")
+        return value
