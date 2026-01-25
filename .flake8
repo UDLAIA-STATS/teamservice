@@ -1,0 +1,5 @@
+[flake8]
+exclude = __init__.py,.venv,__pycache__,settings.ini,env,migrations,res
+max-line-length = 100
+aggresive = 3
+slect = E,W,F401,F403,W293,E501,W292

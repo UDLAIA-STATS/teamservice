@@ -9,20 +9,20 @@ from torneo.tests.helpers import parse_response
 class EquipoTests(TestCase):
     def setUp(self):
         self.client = APIClient()
-        self.institucion = Institucion.objects.create(
-            nombreinstitucion="Institución 1"
-        )
+        self.institucion = Institucion.objects.create(nombreinstitucion="Institución 1")
         # create multiple equipos for search/pagination tests
         self.equipos = []
         names = ["Tigres FC", "Leones", "Panteras", "Pantera Negra", "Equipo Medio"]
         for n in names:
-            e = Equipo.objects.create(idinstitucion=self.institucion, nombreequipo=n, equipoactivo=True)
+            e = Equipo.objects.create(
+                idinstitucion=self.institucion, nombreequipo=n, equipoactivo=True
+            )
             self.equipos.append(e)
 
         self.data = {
             "idinstitucion": self.institucion.idinstitucion,
             "nombreequipo": "Tigres FC",
-            "equipoactivo": True
+            "equipoactivo": True,
         }
 
     # ---------- Creación (positivos y negativos - particiones) ----------
@@ -31,7 +31,7 @@ class EquipoTests(TestCase):
         data = {
             "idinstitucion": self.institucion.idinstitucion,
             "nombreequipo": "Águilas",
-            "equipoactivo": True
+            "equipoactivo": True,
         }
         response = self.client.post(url, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -65,7 +65,9 @@ class EquipoTests(TestCase):
     def test_actualizar_equipo(self):
         equipo = self.equipos[0]
         url = reverse("equipo-update", args=[equipo.idequipo])
-        response = self.client.patch(url, {"nombreequipo": "NuevoNombre"}, format="json")
+        response = self.client.patch(
+            url, {"nombreequipo": "NuevoNombre"}, format="json"
+        )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_actualizar_equipo_inexistente(self):
@@ -82,7 +84,7 @@ class EquipoTests(TestCase):
     def test_eliminar_equipo_inactivo(self):
         equipo = self.equipos[3]
         equipo.equipoactivo = False
-        equipo.save(update_fields=['equipoactivo'])
+        equipo.save(update_fields=["equipoactivo"])
         url = reverse("equipo-delete", args=[equipo.idequipo])
         response = self.client.delete(url)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -94,15 +96,16 @@ class EquipoTests(TestCase):
         # endpoint devuelve 200 si encuentra, 404 si no (actual behavior)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = parse_response(response)
-        self.assertIn('data', data)
-        self.assertEqual(data['data']['nombreequipo'], "Panteras")
+        self.assertIn("data", data)
+        self.assertEqual(data["data"]["nombreequipo"], "Panteras")
 
     def test_buscar_equipo_por_nombre_parcial(self):
         # buscar por substring que coincide con 2 equipos (Panteras, Pantera Negra)
         # current endpoint requires exact name; test documents behavior expecting 404 for substring
         url = reverse("equipo-search", args=["Pantera"])
         response = self.client.get(url)
-        # If API returns 404 for non-exact, assert 404; if changed later to support substring, adjust to 200 and check results length
+        # If API returns 404 for non-exact, assert 404; if changed later to support
+        # #substring, adjust to 200 and check results length
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     # ---------- Paginación (valores típicos, límites, no numéricos) ----------
@@ -111,22 +114,26 @@ class EquipoTests(TestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = parse_response(response)
-        self.assertIn('results', data)
-        self.assertLessEqual(len(data['results']), 2)
+        self.assertIn("results", data)
+        self.assertLessEqual(len(data["results"]), 2)
 
     def test_paginacion_page_zero(self):
         url = reverse("equipo-all") + "?page=0&offset=2"
         response = self.client.get(url)
-        # Endpoint may treat page=0 as invalid -> expect 400 or return page 1; accept either but assert type and structure
-        self.assertIn(response.status_code, (status.HTTP_200_OK, status.HTTP_400_BAD_REQUEST))
+        # Endpoint may treat page=0 as invalid -> expect 400 or return page 1;
+        # accept either but assert type and structure
+        self.assertIn(
+            response.status_code, (status.HTTP_200_OK, status.HTTP_400_BAD_REQUEST)
+        )
 
     def test_paginacion_offset_negativo(self):
         url = reverse("equipo-all") + "?page=1&offset=-1"
         response = self.client.get(url)
         # current pagination implementation may accept negative offsets and return 200,
         # or validate and return 400. Accept both behaviors but ensure response structure.
-        self.assertIn(response.status_code, (status.HTTP_200_OK, status.HTTP_400_BAD_REQUEST))
+        self.assertIn(
+            response.status_code, (status.HTTP_200_OK, status.HTTP_400_BAD_REQUEST)
+        )
         if response.status_code == status.HTTP_200_OK:
             data = parse_response(response)
-            self.assertIn('results', data)
-
+            self.assertIn("results", data)

@@ -8,10 +8,7 @@ from torneo.models import Institucion
 class InstitucionTests(TestCase):
     def setUp(self):
         self.client = APIClient()
-        self.data = {
-            "nombreinstitucion": "Universidad X",
-            "institucionactiva": True
-        }
+        self.data = {"nombreinstitucion": "Universidad X", "institucionactiva": True}
 
     def test_crear_institucion(self):
         url = reverse("institucion-list-create")
@@ -27,7 +24,9 @@ class InstitucionTests(TestCase):
     def test_actualizar_institucion(self):
         inst = Institucion.objects.create(nombreinstitucion="Institucion Y")
         url = reverse("institucion-update", args=[inst.idinstitucion])
-        response = self.client.patch(url, {"nombreinstitucion": "Nuevo nombre"}, format="json")
+        response = self.client.patch(
+            url, {"nombreinstitucion": "Nuevo nombre"}, format="json"
+        )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_eliminar_institucion(self):

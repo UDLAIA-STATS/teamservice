@@ -17,7 +17,7 @@ class TorneoTests(TestCase):
             descripciontemporada="Desc",
             tipotemporada="Oficial",
             fechainiciotemporada=datetime.now(),
-            fechafintemporada=datetime.now() + timedelta(days=10)
+            fechafintemporada=datetime.now() + timedelta(days=10),
         )
 
         self.data = {
@@ -26,7 +26,7 @@ class TorneoTests(TestCase):
             "descripciontorneo": "Torneo importante",
             "fechainiciotorneo": datetime.now().isoformat(),
             "fechafintorneo": (datetime.now() + timedelta(days=7)).isoformat(),
-            "torneoactivo": True
+            "torneoactivo": True,
         }
 
         # crear torneos para búsqueda/paginación
@@ -38,7 +38,7 @@ class TorneoTests(TestCase):
                 descripciontorneo="Desc",
                 fechainiciotorneo=datetime.now(),
                 fechafintorneo=datetime.now() + timedelta(days=3),
-                torneoactivo=True
+                torneoactivo=True,
             )
             self.torneos.append(t)
 
@@ -63,7 +63,9 @@ class TorneoTests(TestCase):
     def test_actualizar_torneo(self):
         torneo = self.torneos[1]
         url = reverse("torneo-update", args=[torneo.idtorneo])
-        response = self.client.patch(url, {"descripciontorneo": "Nueva Desc"}, format="json")
+        response = self.client.patch(
+            url, {"descripciontorneo": "Nueva Desc"}, format="json"
+        )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_eliminar_torneo(self):
@@ -77,5 +79,4 @@ class TorneoTests(TestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = parse_response(response)
-        self.assertIn('results', data)
-    
+        self.assertIn("results", data)

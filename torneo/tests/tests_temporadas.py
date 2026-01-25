@@ -20,7 +20,7 @@ class TemporadaTests(TestCase):
                 tipotemporada="Oficial",
                 fechainiciotemporada=datetime.now(),
                 fechafintemporada=datetime.now() + timedelta(days=5),
-                temporadaactiva=True
+                temporadaactiva=True,
             )
             self.temporadas.append(t)
 
@@ -30,7 +30,7 @@ class TemporadaTests(TestCase):
             "tipotemporada": "Oficial",
             "fechainiciotemporada": datetime.now().isoformat(),
             "fechafintemporada": (datetime.now() + timedelta(days=10)).isoformat(),
-            "temporadaactiva": True
+            "temporadaactiva": True,
         }
 
     def test_crear_temporada_valida(self):
@@ -42,11 +42,15 @@ class TemporadaTests(TestCase):
         url = reverse("temporada-list-create")
         invalid = self.data.copy()
         # fecha inicio posterior a fecha fin
-        invalid["fechainiciotemporada"] = (datetime.now() + timedelta(days=10)).isoformat()
+        invalid["fechainiciotemporada"] = (
+            datetime.now() + timedelta(days=10)
+        ).isoformat()
         invalid["fechafintemporada"] = datetime.now().isoformat()
         response = self.client.post(url, invalid, format="json")
         # expect validation error or 201 depending on serializer; assert 400 if validated
-        self.assertIn(response.status_code, (status.HTTP_400_BAD_REQUEST, status.HTTP_201_CREATED))
+        self.assertIn(
+            response.status_code, (status.HTTP_400_BAD_REQUEST, status.HTTP_201_CREATED)
+        )
 
     def test_obtener_temporada(self):
         temp = self.temporadas[1]
@@ -60,15 +64,17 @@ class TemporadaTests(TestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
         data = parse_response(response)
-        self.assertIn('error', data)
+        self.assertIn("error", data)
 
     def test_actualizar_temporada(self):
         temp = self.temporadas[0]
         url = reverse("temporada-update", kwargs={"pk": temp.idtemporada})
-        response = self.client.patch(url, {"descripciontemporada": "Nueva Desc"}, format="json")
+        response = self.client.patch(
+            url, {"descripciontemporada": "Nueva Desc"}, format="json"
+        )
         data = parse_response(response)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIn("Temporada actualizada correctamente", data['mensaje'])
+        self.assertIn("Temporada actualizada correctamente", data["mensaje"])
 
     def test_eliminar_temporada(self):
         temp = self.temporadas[2]
@@ -76,4 +82,4 @@ class TemporadaTests(TestCase):
         response = self.client.delete(url)
         data = parse_response(response)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIn("Temporada deshabilitada correctamente", data['mensaje'])
+        self.assertIn("Temporada deshabilitada correctamente", data["mensaje"])
