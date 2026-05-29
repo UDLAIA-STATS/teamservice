@@ -1,5 +1,5 @@
-from .equipo_serializer import EquipoSerializer
-from .institucion_serializer import InstitucionSerializer
-from .partido_serializer import PartidoSerializer
-from .torneo_serializer import TorneoSerializer
-from .temporada_serializer import TemporadaSerializer
+from .equipo_serializer import EquipoSerializer as EquipoSerializer
+from .institucion_serializer import InstitucionSerializer as InstitucionSerializer
+from .partido_serializer import PartidoSerializer as PartidoSerializer
+from .torneo_serializer import TorneoSerializer as TorneoSerializer
+from .temporada_serializer import TemporadaSerializer as TemporadaSerializer

@@ -1,8 +1,8 @@
 from django.db import models
-from .temporada import *
-from .equipo import *
-from .institucion import *
-from .torneo import *
+from torneo.models.equipo import Equipo
+from torneo.models.torneo import Torneo, Temporada
+from torneo.models.temporada import Temporada
+
 
 class Partido(models.Model):
     idpartido = models.AutoField(primary_key=True)
@@ -12,16 +12,24 @@ class Partido(models.Model):
     partidosubido = models.BooleanField(default=False)
 
     idequipolocal = models.ForeignKey(
-        Equipo, related_name='partidoslocal', on_delete=models.CASCADE, db_column='idequipolocal')
+        Equipo,
+        related_name="partidoslocal",
+        on_delete=models.CASCADE,
+        db_column="idequipolocal",
+    )
     idequipovisitante = models.ForeignKey(
-        Equipo, related_name='partidosvisitante', on_delete=models.CASCADE, db_column='idequipovisitante')
-    idtorneo = models.ForeignKey(
-        Torneo, on_delete=models.CASCADE, db_column='idtorneo')
+        Equipo,
+        related_name="partidosvisitante",
+        on_delete=models.CASCADE,
+        db_column="idequipovisitante",
+    )
+    idtorneo = models.ForeignKey(Torneo, on_delete=models.CASCADE, db_column="idtorneo")
     idtemporada = models.ForeignKey(
-        Temporada, on_delete=models.CASCADE, db_column='idtemporada')
+        Temporada, on_delete=models.CASCADE, db_column="idtemporada"
+    )
 
     class Meta:
-        db_table = 'partido'
+        db_table = "partido"
 
     def __str__(self):
         return f"{self.idequipolocal} vs {self.idequipovisitante} ({self.fechapartido.date()})"

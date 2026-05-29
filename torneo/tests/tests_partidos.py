@@ -18,7 +18,7 @@ class PartidoTests(TestCase):
             descripciontemporada="Desc",
             tipotemporada="Oficial",
             fechainiciotemporada=datetime.now() - timedelta(days=5),
-            fechafintemporada=datetime.now() + timedelta(days=10)
+            fechafintemporada=datetime.now() + timedelta(days=10),
         )
 
         self.torneo = Torneo.objects.create(
@@ -29,12 +29,10 @@ class PartidoTests(TestCase):
             fechafintorneo=datetime.now() + timedelta(days=4),
         )
         self.equipo1 = Equipo.objects.create(
-            idinstitucion=self.institucion,
-            nombreequipo="Equipo A"
+            idinstitucion=self.institucion, nombreequipo="Equipo A"
         )
         self.equipo2 = Equipo.objects.create(
-            idinstitucion=self.institucion,
-            nombreequipo="Equipo B"
+            idinstitucion=self.institucion, nombreequipo="Equipo B"
         )
 
         # crear varios partidos para búsqueda/paginación
@@ -69,7 +67,9 @@ class PartidoTests(TestCase):
         invalid["idequipovisitante"] = invalid["idequipolocal"]
         response = self.client.post(url, invalid, format="json")
         # assuming serializer validates equipos distintos -> expect 400, otherwise adjust
-        self.assertIn(response.status_code, (status.HTTP_400_BAD_REQUEST, status.HTTP_201_CREATED))
+        self.assertIn(
+            response.status_code, (status.HTTP_400_BAD_REQUEST, status.HTTP_201_CREATED)
+        )
 
     # ---------- Obtener / Actualizar / Eliminar (positivos y negativos) ----------
     def test_obtener_partido(self):
@@ -86,11 +86,15 @@ class PartidoTests(TestCase):
     def test_actualizar_partido(self):
         partido = self.partidos[1]
         url = reverse("partido-update", args=[partido.idpartido])
-        response = self.client.patch(url, {
-            "marcadorequipolocal": 4,
-            "marcadorequipovisitante": 2,
-            "fechapartido": datetime.now().isoformat(),
-        }, format="json")
+        response = self.client.patch(
+            url,
+            {
+                "marcadorequipolocal": 4,
+                "marcadorequipovisitante": 2,
+                "fechapartido": datetime.now().isoformat(),
+            },
+            format="json",
+        )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_actualizar_partido_inexistente(self):
@@ -119,7 +123,7 @@ class PartidoTests(TestCase):
         response = self.client.get(url)
         data = parse_response(response)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIn('results', data)
+        self.assertIn("results", data)
 
     def test_buscar_partido_por_criterio_no_existente(self):
         # validate that filter with no matches returns empty results
@@ -127,7 +131,7 @@ class PartidoTests(TestCase):
         response = self.client.get(url)
         data = parse_response(response)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIn('results', data)
+        self.assertIn("results", data)
         # results should be empty or not contain matches
 
     # ---------- Paginación (valores medios y límites) ----------
@@ -136,10 +140,12 @@ class PartidoTests(TestCase):
         response = self.client.get(url)
         data = parse_response(response)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertLessEqual(len(data.get('results', [])), 2)
+        self.assertLessEqual(len(data.get("results", [])), 2)
 
     def test_paginacion_offset_grande(self):
         url = reverse("partido-all") + "?page=1&offset=1000"
         response = self.client.get(url)
         # either returns large page or 400 if limited; accept both but ensure structure
-        self.assertIn(response.status_code, (status.HTTP_200_OK, status.HTTP_400_BAD_REQUEST))
+        self.assertIn(
+            response.status_code, (status.HTTP_200_OK, status.HTTP_400_BAD_REQUEST)
+        )

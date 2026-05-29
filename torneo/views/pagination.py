@@ -11,9 +11,15 @@ def paginate_queryset(queryset, serializer_class, request):
         offset = int(request.query_params.get("offset", 10))
 
         if page < 1 or offset < 1:
-            return error_response(message="Paginación inválida", data=None, status=status.HTTP_400_BAD_REQUEST)
+            return error_response(
+                message="Paginación inválida",
+                data=None,
+                status=status.HTTP_400_BAD_REQUEST,
+            )
     except ValueError:
-        return error_response(message="Paginación inválida", data=None, status=status.HTTP_400_BAD_REQUEST)
+        return error_response(
+            message="Paginación inválida", data=None, status=status.HTTP_400_BAD_REQUEST
+        )
 
     total = queryset.count()
     start = (page - 1) * offset
@@ -27,5 +33,5 @@ def paginate_queryset(queryset, serializer_class, request):
         offset=offset,
         pages=ceil(total / offset) if offset > 0 else 1,
         total_items=total,
-        status=status.HTTP_200_OK
+        status=status.HTTP_200_OK,
     )
