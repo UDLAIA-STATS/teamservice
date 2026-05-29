@@ -13,6 +13,7 @@ env:
   POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
   POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
   POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+  SECRET_KEY: ${{ secrets.SECRET_KEY }} 
 
 jobs:
   tests:
@@ -100,16 +101,9 @@ jobs:
           POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
           POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
           FRONTEND_URL: ${{ secrets.FRONTEND_URL }}
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
         run: |
           docker build \
-            --build-arg DEBUG=True \
-            --build-arg ALLOWED_HOSTS=localhost,127.0.0.1 \
-            --build-arg POSTGRES_HOST=localhost \
-            --build-arg POSTGRES_PORT=5440 \
-            --build-arg POSTGRES_DB=${{ env.POSTGRES_DB }} \
-            --build-arg POSTGRES_USER=${{ env.POSTGRES_USER }} \
-            --build-arg POSTGRES_PASSWORD=${{ env.POSTGRES_PASSWORD }} \
-            --build-arg FRONTEND_URL=${{ env.FRONTEND_URL }} \
             -t ${{ env.IMAGE_NAME }} \
             -f Dockerfile .
 
