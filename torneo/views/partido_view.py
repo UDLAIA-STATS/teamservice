@@ -2,6 +2,7 @@ from django.http import Http404
 from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
 from rest_framework import status
+from django.db.models import Q
 
 from torneo.models import Partido
 from torneo.serializers import PartidoSerializer
@@ -42,7 +43,35 @@ class PartidoListCreateView(APIView):
                 message=str(e), data=None, status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
+class PartidoSearchView(APIView):
+    def get(self, request):
+        try:
+            search = request.query_params.get("search", "").strip()
 
+            partidos = Partido.objects.all()
+
+            if search:
+                partidos = partidos.filter(
+                    Q(idequipolocal__nombreequipo__icontains=search)
+                    | Q(idequipovisitante__nombreequipo__icontains=search)
+                    | Q(idtorneo__nombretorneo__icontains=search)
+                    | Q(idtemporada__nombretemporada__icontains=search)
+                )
+
+            partidos = partidos.order_by("idpartido")
+
+            return paginate_queryset(
+                partidos,
+                PartidoSerializer,
+                request,
+            )
+
+        except Exception as e:
+            return error_response(
+                message=str(e),
+                data=None,
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 class PartidoDetailView(APIView):
     def get_object(self, pk):
         """
