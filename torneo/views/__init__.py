@@ -20,6 +20,7 @@ from .partido_view import (
     PartidoAllView as PartidoAllView,
     PartidoUpdateView as PartidoUpdateView,
     PartidoDeleteView as PartidoDeleteView,
+    PartidoSearchView as PartidoSearchView,
 )
 from .torneo_view import (
     TorneoListCreateView as TorneoListCreateView,
