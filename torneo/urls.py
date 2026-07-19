@@ -24,6 +24,7 @@ urlpatterns = [
         "partidos/<int:pk>/delete/", views.PartidoDeleteView.as_view(), name="partido-delete"
     ),
     path("partidos/search", views.PartidoSearchView.as_view(), name="partido-search"),
+    path("partidos/bytemporadas/", views.PartidoByTemporadas.as_view(), name="partido-bytemporadas"),
     # ================= TORNEOS =================
     path("torneos/", views.TorneoListCreateView.as_view(), name="torneo-list-create"),
     path("torneos/all/", views.TorneoAllView.as_view(), name="torneo-all"),
