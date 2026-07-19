@@ -43,6 +43,27 @@ class PartidoListCreateView(APIView):
                 message=str(e), data=None, status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
+
+class PartidoByTemporadas(APIView):
+    def get(self, request):
+        try:
+            temporadaId = request.query_params.get("temporadaId", "").strip()
+            partidos = Partido.objects.filter(idtemporada=temporadaId).order_by(
+                "idpartido"
+            )
+            return paginate_queryset(
+                partidos,
+                PartidoSerializer,
+                request,
+            )
+        except Exception as e:
+            return error_response(
+                message=str(e),
+                data=None,
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+
 class PartidoSearchView(APIView):
     def get(self, request):
         try:
@@ -72,6 +93,8 @@ class PartidoSearchView(APIView):
                 data=None,
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
+
+
 class PartidoDetailView(APIView):
     def get_object(self, pk):
         """
