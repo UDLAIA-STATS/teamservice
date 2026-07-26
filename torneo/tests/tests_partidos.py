@@ -149,3 +149,185 @@ class PartidoTests(TestCase):
         self.assertIn(
             response.status_code, (status.HTTP_200_OK, status.HTTP_400_BAD_REQUEST)
         )
+
+    def test_crear_partido_fecha_fuera_del_torneo(self):
+        url = reverse("partido-list-create")
+
+        data = self.data.copy()
+        data["fechapartido"] = (
+            self.torneo.fechafintorneo + timedelta(days=5)
+        ).isoformat()
+
+        response = self.client.post(url, data, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_crear_partido_fecha_duplicada_para_un_equipo(self):
+        partido = self.partidos[0]
+
+        url = reverse("partido-list-create")
+
+        data = {
+            "fechapartido": partido.fechapartido.isoformat(),
+            "idequipolocal": self.equipo1.idequipo,
+            "idequipovisitante": self.equipo2.idequipo,
+            "idtorneo": self.torneo.idtorneo,
+            "idtemporada": self.temp.idtemporada,
+        }
+
+        response = self.client.post(url, data, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_actualizar_partido_marcador_local_negativo(self):
+        partido = self.partidos[0]
+
+        url = reverse("partido-update", args=[partido.idpartido])
+
+        response = self.client.patch(
+            url,
+            {"marcadorequipolocal": -1},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_actualizar_partido_marcador_visitante_negativo(self):
+        partido = self.partidos[0]
+
+        url = reverse("partido-update", args=[partido.idpartido])
+
+        response = self.client.patch(
+            url,
+            {"marcadorequipovisitante": -3},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_actualizar_partido_equipos_iguales(self):
+        partido = self.partidos[0]
+
+        url = reverse("partido-update", args=[partido.idpartido])
+
+        response = self.client.patch(
+            url,
+            {"idequipovisitante": self.equipo1.idequipo},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_actualizar_partido_fecha_fuera_del_torneo(self):
+        partido = self.partidos[0]
+
+        url = reverse("partido-update", args=[partido.idpartido])
+
+        response = self.client.patch(
+            url,
+            {
+                "fechapartido": (
+                    self.torneo.fechafintorneo + timedelta(days=2)
+                ).isoformat()
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_actualizar_partido_conflicto_fecha(self):
+        partido1 = self.partidos[0]
+        partido2 = self.partidos[1]
+
+        url = reverse("partido-update", args=[partido2.idpartido])
+
+        response = self.client.patch(
+            url,
+            {"fechapartido": partido1.fechapartido.isoformat()},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_busqueda_por_nombre_equipo(self):
+        url = reverse("partido-search") + "?search=Equipo A"
+
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_busqueda_por_torneo(self):
+        url = reverse("partido-search") + "?search=Torneo P"
+
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_busqueda_por_temporada(self):
+        url = reverse("partido-search") + "?search=Temp P"
+
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_busqueda_sin_resultados(self):
+        url = reverse("partido-search") + "?search=XXXXX"
+
+        response = self.client.get(url)
+
+        data = parse_response(response)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(data.get("results", [])), 0)
+
+    def test_partidos_por_temporada(self):
+        url = reverse("partido-bytemporadas") + f"?temporadaId={self.temp.idtemporada}"
+
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_partidos_por_temporada_inexistente(self):
+        url = reverse("partido-bytemporadas") + "?temporadaId=9999"
+
+        response = self.client.get(url)
+
+        data = parse_response(response)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(data.get("results", [])), 0)
+
+    def test_serializer_valida_marcador_local(self):
+        from torneo.serializers import PartidoSerializer
+
+        serializer = PartidoSerializer(
+            self.partidos[0],
+            data={"marcadorequipolocal": -1},
+            partial=True,
+        )
+
+        self.assertFalse(serializer.is_valid())
+        self.assertIn("marcadorequipolocal", serializer.errors)
+
+    def test_serializer_valida_marcador_visitante(self):
+        from torneo.serializers import PartidoSerializer
+
+        serializer = PartidoSerializer(
+            self.partidos[0],
+            data={"marcadorequipovisitante": -1},
+            partial=True,
+        )
+
+        self.assertFalse(serializer.is_valid())
+        self.assertIn("marcadorequipovisitante", serializer.errors)
+
+    def test_serializer_actualizacion_valida(self):
+        from torneo.serializers import PartidoSerializer
+
+        serializer = PartidoSerializer(
+            self.partidos[0],
+            data={"marcadorequipolocal": 5},
+            partial=True,
+        )
+
+        self.assertTrue(serializer.is_valid())
